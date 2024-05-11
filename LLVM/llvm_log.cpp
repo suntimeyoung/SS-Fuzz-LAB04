@@ -1,5 +1,5 @@
-#include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -12,36 +12,42 @@
 using namespace llvm;
 
 namespace {
-    class InsertLogBasic64 : public FunctionPass {
-    public:
+    struct InsertLogBasic : public FunctionPass {
         static char ID;
-        InsertLogBasic64() : FunctionPass(ID) {}
-
-        bool runOnFunction(Function &F) override {
-            for (auto &B : F) {
-                Instruction *TInst = B.getTerminator();
-                IRBuilder<> Builder(TInst);
-                LLVMContext &Context = F.getContext();
-
-                // 获取或插入 logBasic 函数定义
-                FunctionCallee logFunc = F.getParent()->getOrInsertFunction(
-                    "logBasic", FunctionType::get(Type::getVoidTy(Context), {Type::getInt64Ty(Context)}, false)
-                );
-
-                // 创建调用 logBasic 的指令，参数为基本块终结指令的地址，确保为64位
-                Value *TInstAddr = Builder.CreatePtrToInt(TInst, Type::getInt64Ty(Context));
-                Builder.CreateCall(logFunc, {TInstAddr});
-
-                errs() << "logBasic called with address: " << *TInstAddr << "\n";
-            }
-            return true;
-        }
+        InsertLogBasic() : FunctionPass(ID) {}
+        bool runOnFunction(Function &F) override;
     };
 }
 
-char InsertLogBasic64::ID = 0;
-static void registerInsertLogBasic64(const PassManagerBuilder &, legacy::PassManagerBase &PM) {
-    PM.add(new InsertLogBasic64());
+char InsertLogBasic::ID = 0;
+
+bool InsertLogBasic::runOnFunction(Function &F) {
+    for (auto &B : F) {
+        errs() << "this is basicblock\n";
+        Instruction *TInst = B.getTerminator();
+        IRBuilder<> Builder(TInst);
+        LLVMContext &Context = F.getContext();
+
+        // 获取或插入 logBasic 函数定义
+        FunctionCallee logFunc = F.getParent()->getOrInsertFunction(
+            "logBasic", FunctionType::get(Type::getVoidTy(Context), {Type::getInt64Ty(Context)}, false)
+        );
+
+        // 创建调用 logBasic 的指令，参数为基本块终结指令的地址，确保为64位
+        errs() << TInst << "\n";
+        Value *TInstAddr = Builder.CreatePtrToInt(TInst, Type::getInt64Ty(Context));
+        ArrayRef<Value*> args{TInstAddr};
+        // Builder.CreateCall(logFunc, args);
+
+        errs() << "logBasic called with address: " << TInstAddr << "\n";
+        TInstAddr->getType()->print(errs());
+        errs() << "\n";
+    }
+  return false;
 }
 
-static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerInsertLogBasic64);
+
+static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
+  [](const PassManagerBuilder &Builder, legacy::PassManagerBase &PM) {
+    PM.add(new InsertLogBasic());
+  });

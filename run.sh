@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 确定 LLVM 的版本和工具的位置
-LLVM_CONFIG="llvm-config"
+LLVM_CONFIG="llvm-config-12"
 
 # 检查 llvm-config 工具是否可用
 if ! [ -x "$(command -v $LLVM_CONFIG)" ]; then
@@ -19,9 +19,10 @@ clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared ./LLVM/llvm_log.cpp 
 
 # 使用 llvm_log.so 处理 test.cpp
 clang++-12 -Xclang -load -Xclang ./LLVM/llvm_log.so -c test.cpp -o ./tmp/test.o
+# clang++-12 -Xclang -load -Xclang ./LLVM/llvm_log.so -c test.cpp -o ./tmp/test.ll
 # clang++-12 -Xclang -load -Xclang ./LLVM/hello.so -c test.cpp -o ./tmp/test_hello.o
 
 # 编译 logFunc.cpp 生成链接文件 logFunc.o
-clang++-12 -c ./LLVM/logFunc.cpp -o ./tmp/logFunc.o
+# clang++-12 -c ./LLVM/logFunc.cpp -o ./tmp/logFunc.o
 
-clang++-12 ./tmp/test.o ./tmp/logFunc.o -o test
+# clang++-12 ./tmp/test.o ./tmp/logFunc.o -o test
