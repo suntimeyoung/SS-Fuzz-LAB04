@@ -2,9 +2,11 @@
 #include <queue>
 #include <string>
 #include <set>
+#include <vector>
 
 using namespace std;
 
+/*The class of seedfile, including the rules of priority queue*/
 class SeedFile{
 public:
     string _filename;
@@ -24,14 +26,26 @@ public:
     
 };
 
+/*The class of seedfile management, including the initialization, the seed derivation, the seed storage, and seed aquirement*/
 class SeedManage{
 public:
-    priority_queue<SeedFile> _seed_queue;
     string absolute_path;
+    int mutation_small_count;
+    int mutation_large_count;
+    
+    SeedManage(string _absolute_path, int _mutation_small_count, int _mutation_large_count):
+        absolute_path(_absolute_path), mutation_small_count(_mutation_small_count), mutation_large_count(_mutation_large_count) {}
+    SeedManage() {}
 
+    vector<SeedFile> seed_init(int init_num);
+    vector<SeedFile> seed_mutation_small();
+    vector<SeedFile> seed_mutation_large();
     void push_into_queue(SeedFile sf);
-    void _gen_filename();
+    SeedFile get_next_seedfile();
     void test_queue();
 private:
     set<uint32_t> _seed_hash; 
+    priority_queue<SeedFile> _seed_queue;
+
+    string _gen_filename();
 }
