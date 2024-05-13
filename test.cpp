@@ -19,10 +19,13 @@ int FuncC(int a, int b) {
 }
 
 int main () {
-    int a, b;
-    cin >> a >> b;
-    if (a > b) {
+    int a, b, i=5;
+    while (i--) {
+        cin >> a >> b;  
+        if (a > b) {
         cout << FuncC(a, b) << endl;
+        }
+        cout << FuncA(a) + FuncB(b) << endl;  
     }
-    cout << FuncA(a) + FuncB(b) << endl;
+    
 }

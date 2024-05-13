@@ -38,6 +38,29 @@ namespace {
     };
 }
 
+// bool InsertLogBasic::runOnFunction(Function &F) {
+//     // 创建或获取全局计数器变量
+//     Module *M = F.getParent();
+//     LLVMContext &Context = F.getContext();
+//     GlobalVariable *address = dyn_cast<GlobalVariable>(M->getOrInsertGlobal("blockAddress", Type::getInt32Ty(Context)));
+//     if (!address) {
+//         address = new GlobalVariable(*M, Type::getInt32Ty(Context), false, GlobalValue::InternalLinkage, ConstantInt::get(Type::getInt32Ty(Context), 0), "blockAddress");
+//     }
+//     for (auto &B : F) {
+//         errs() << "this is basicblock\n";
+//         BasicBlock::iterator IP = B.getFirstInsertionPt();
+//         IRBuilder<> Builder(&(*IP)); // 将构造器位置设在基本块的开始
+//         // 加载当前计数
+//         LoadInst* currentAdd = Builder.CreateLoad(Type::getInt32Ty(Context), address, "loadAddress");
+//         // 创建自增操作
+//         Value *incremented = Builder.CreateAdd(currentAdd, ConstantInt::get(Type::getInt32Ty(Context), 1), "increment");
+//         // 存储回全局变量
+//         Builder.CreateStore(incremented, address);
+
+//     }
+//   return true;
+// }
+
 char BranchInstrumentationPass::ID = 0;
 
 static void registerBranchInstrumentationPass(const PassManagerBuilder &, legacy::PassManagerBase &PM) {

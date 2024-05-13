@@ -23,6 +23,6 @@ clang++-12 -Xclang -load -Xclang ./LLVM/llvm_log.so -c test.cpp -o ./tmp/test.o
 # clang++-12 -Xclang -load -Xclang ./LLVM/hello.so -c test.cpp -o ./tmp/test_hello.o
 
 # 编译 logFunc.cpp 生成链接文件 logFunc.o
-# clang++-12 -c ./LLVM/logFunc.cpp -o ./tmp/logFunc.o
+clang++-12 -c ./LLVM/logFunc.cpp -o ./tmp/logFunc.o
 
-# clang++-12 ./tmp/test.o ./tmp/logFunc.o -o test
+clang++-12 ./tmp/logFunc.o ./tmp/test.o -o test
