@@ -17,3 +17,6 @@ extern "C" void logBasic(unsigned long long address) {
     }
     fprintf(logFile, "Branches count: %lu\n", branches.size());
 }
+
+// extern "C" void 
+
