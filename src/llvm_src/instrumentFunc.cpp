@@ -3,20 +3,26 @@
 #include <cstdio>
 #include <set>
 
+#define LOG_FILE "log/branch_log.txt"
 
 unsigned long long last_add = 0;
 std::set<unsigned long long> branches;
 
 
 extern "C" void logBasic(unsigned long long address) {
-    // `address ^ last_add` is indistinguishable from `last_add ^ address`.
+
+    /**
+     * `address ^ last_add` is indistinguishable from `last_add ^ address`.
+     * `(address+1) ^ last_add` differs the appearance order of address.
+    */
+
     // branches.insert((address) ^ last_add);
-    // `(address+1) ^ last_add` differs the appearance order of address.
     branches.insert((address+1) ^ last_add);
+
     last_add = address;
     static FILE *logFile = NULL;
     if (!logFile) {
-        logFile = fopen("./branch_log.txt", "w");
+        logFile = fopen(LOG_FILE, "w");
     }
     fprintf(logFile, "Branches count: %lu\n", branches.size());
 }

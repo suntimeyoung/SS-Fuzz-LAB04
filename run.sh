@@ -26,4 +26,4 @@ clang++-12 -Xclang -load -Xclang ./tmp/so/instrument.so -c test.cpp -o ./tmp/o/t
 # 编译 instrumentFunc.cpp 生成链接文件 instrumentFunc.o
 clang++-12 -c ./src/llvm_src/instrumentFunc.cpp -o ./tmp/o/instrumentFunc.o
 
-clang++-12 ./tmp/o/instrumentFunc.o ./tmp/o/test.o -o test
+clang++-12 ./tmp/o/instrumentFunc.o ./tmp/o/test.o -o bin/test
