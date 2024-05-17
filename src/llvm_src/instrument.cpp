@@ -15,7 +15,8 @@ using namespace llvm;
 namespace {
     struct InstrumentFunc : public FunctionPass {
         static char ID;
-        std::mt19937_64 rng; // 随机数生成器
+        // random gen.
+        std::mt19937_64 rng;
         std::uniform_int_distribution<uint64_t> dist;
 
         InstrumentFunc() : FunctionPass(ID), rng(std::random_device{}()), dist(std::uniform_int_distribution<uint64_t>(0, UINT64_MAX)) {}
@@ -30,28 +31,25 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     Module *M = F.getParent();
     LLVMContext &Context = M->getContext();
       
-    // 首先查找或创建log函数原型
+    // create `logBasic`.
     FunctionCallee logFunc = M->getOrInsertFunction("logBasic", Type::getVoidTy(Context), Type::getInt64Ty(Context));
+
+    // instrument `forkserver` in the entrypoint.
+    if (F.getName() == "main") {
+        IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
+        FunctionCallee forkServer = M->getOrInsertFunction("forkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
+        forkBuilder.CreateCall(forkServer);
+    }
       
     for (auto &B : F) {
-        uint64_t randomValue = dist(rng); // 为当前基本块生成一个随机值
 
-        // 插入指令的位置在基本块的开始
-        BasicBlock::iterator IP = B.getFirstInsertionPt();
-        IRBuilder<> Builder(&(*IP));
-            
-        // 构建一个64位常数
+        uint64_t randomValue = dist(rng);
         Value *logArg = ConstantInt::get(Type::getInt64Ty(Context), randomValue);
             
-        // 在基本块中插入调用log函数的指令
-        Builder.CreateCall(logFunc, {logArg});
-        if (F.getName() == "main ") {
-            FunctionCallee forkServer = M->getOrInsertFunction("forkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
-            errs() << "This func is " << F.getName() << "\n";
-            Builder.CreateCall(forkServer);
-        }
+        // instrument `logBasic` in every block.
+        IRBuilder<> logBuilder(&(*(B.getFirstInsertionPt())));
+        logBuilder.CreateCall(logFunc, {logArg});
             
-        // 打印信息到stderr
         // errs() << "Inserted log call in basic block with random value: " << randomValue << "\n";
     }
     return true;
