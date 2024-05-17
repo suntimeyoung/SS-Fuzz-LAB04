@@ -19,7 +19,7 @@ int FuncC(int a, int b) {
 }
 
 int main () {
-    int a, b, i=5;
+    int a, b, i=2;
     while (i--) {
         cin >> a >> b;  
         if (a > b) {
