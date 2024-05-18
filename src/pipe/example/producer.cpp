@@ -7,9 +7,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <iostream>
+
 #define FIFO_NAME "testp"
 #define BUFFER_SIZE 4096
-#define TEN_MEG (1024 * 1024 * 10)
+// #define TEN_MEG (1024 * 1024 * 10)
 
 int main(void)
 {
@@ -35,7 +37,7 @@ int main(void)
 
     if(pipe_fd != -1)
     {
-        while(bytes_sent < TEN_MEG)
+        while(bytes_sent < BUFFER_SIZE)
         {
             res = write(pipe_fd, buffer, BUFFER_SIZE);
             if(res == -1)

@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <unistd.h>
 #include <iostream>
 
 using namespace std;
@@ -19,13 +20,18 @@ int FuncC(int a, int b) {
 }
 
 int main () {
-    int a, b, i=2;
-    while (i--) {
-        cin >> a >> b;  
+    int a, b;
+    int cnt = 2;
+
+    do {
+        cin >> a >> b;
+
         if (a > b) {
-        cout << FuncC(a, b) << endl;
+            cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
         }
-        cout << FuncA(a) + FuncB(b) << endl;  
-    }
-    
+
+        cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
+    } while (--cnt > 0);
+
+    return 0;
 }

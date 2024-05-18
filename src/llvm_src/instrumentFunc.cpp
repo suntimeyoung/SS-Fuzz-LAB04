@@ -3,11 +3,17 @@
 #include <fcntl.h>
 
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <set>
 
 #define LOG_FILE "log/branch_log.txt"
-#define FIFO_FILE "/tmp/fuzz_fifo"
+#define FIFO_DATA "/tmp/fuzz_fifo_data"
+#define FIFO_INST "/tmp/fuzz_fifo_inst"
+#define BUFFER_SIZE 1024
+#define TEST_INSTANCE_NUM 20
+#define CONTINUE_INST 0
+#define WAIT_INST 1
 
 unsigned long long last_add = 0;
 std::set<unsigned long long> branches;
@@ -33,31 +39,49 @@ extern "C" void logBasic(unsigned long long address) {
 
 extern "C" void forkServer() {
     int times = 0;
+    int inst;
+    int fork_num = 0;
+    char buffer[BUFFER_SIZE + 1];
+
+    int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
+    if (data_pipe_fd == -1) {
+        fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
+        exit(EXIT_FAILURE);
+    }
+
     while (true) {
+
+        if (fork_num++ == TEST_INSTANCE_NUM) {
+            // sleep(10);
+            exit(EXIT_SUCCESS);
+        }
         pid_t pid = fork();
 
         if (pid > 0) {
             // parent
-            std::cout << "(times: " << times++ << ")This is parent from pid: " << getpid() << std::endl;
 
-            // wait for the child to finish
-            int status;
-            waitpid(pid, &status, 0);
+            /** send or get some instructions? */
 
         } else {
             // child
-            std::cout << "(times: "<< times++ << ")This is child from pid: " << getpid() << std::endl;
-            int pipe_fd;
-            if ((pipe_fd = open(FIFO_FILE, O_RDONLY)) != -1) {
-                // dump named pipe `pipe_fd` to the stdin of child process of tested program.
-                dup2(pipe_fd, STDIN_FILENO);
-                std::cout << "(times: "<< times++ << ")Dumped pipe into stdin of child." << std::endl;
-            }
 
-            sleep(10);
+            // get test input file path (stored in `buffer`) from data pipe.
+            if (read(data_pipe_fd, buffer, BUFFER_SIZE) > 0) {
+                // pipe test input file to `stdin`.
+                freopen(buffer, "r", stdin);
+                std::cout << "\n(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buffer << " to the stdin of child." << std::endl;
+            } else {
+                fprintf(stderr, "Read error on pipe %s\n", FIFO_DATA);
+                exit(EXIT_FAILURE);
+            }
 
             return ;
         }
+
+        times ++;
     }
+
+    close(data_pipe_fd);
+    exit(EXIT_SUCCESS);
 }
 
