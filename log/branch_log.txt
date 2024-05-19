@@ -37,9 +37,6 @@ Branches count: 15
 Branches count: 1
 Branches count: 2
 Branches count: 3
-Branches count: 1
-Branches count: 2
-Branches count: 3
 Branches count: 4
 Branches count: 5
 Branches count: 6
@@ -91,6 +88,9 @@ Branches count: 14
 Branches count: 14
 Branches count: 14
 Branches count: 15
+Branches count: 1
+Branches count: 2
+Branches count: 3
 Branches count: 1
 Branches count: 2
 Branches count: 3

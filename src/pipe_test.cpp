@@ -63,7 +63,7 @@ int main() {
 
             // prepare test input file and store its path in `buffer` (to be sent to data pipe).
             char buffer[BUFFER_SIZE + 1];
-            snprintf(buffer, BUFFER_SIZE, "/tmp/input_file_path_%d", tested_instance++);
+            snprintf(buffer, BUFFER_SIZE, "/tmp/fuzz_testcase/file_%d", tested_instance++);
             std::cout << "pipe_tester: make test input file stored in: " << buffer << std::endl;
 
             // simulate getting some test input from seed.

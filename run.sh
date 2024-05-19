@@ -15,15 +15,17 @@ CXXFLAGS=$($LLVM_CONFIG --cxxflags)
 LDFLAGS=$($LLVM_CONFIG --ldflags)
 
 # 编译 instrument.cpp 生成共享库 instrument.so
-clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared ./src/llvm_src/instrument.cpp -o ./tmp/so/instrument.so $LDFLAGS
-# clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared ./src/llvm_src/hello.cpp -o ./tmp/so/hello.so $LDFLAGS
+clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared ./src/instrument.cpp -o ./tmp/so/instrument.so $LDFLAGS
+# clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared ./src/hello.cpp -o ./tmp/so/hello.so $LDFLAGS
 
 # 使用 instrument.so 处理 test.cpp
-clang++-12 -Xclang -load -Xclang ./tmp/so/instrument.so -c test.cpp -o ./tmp/o/test.o
-# clang++-12 -Xclang -load -Xclang ./tmp/so/instrument.so -c test.cpp -o ./tmp/o/test.ll
-# clang++-12 -Xclang -load -Xclang ./tmp/so/hello.so -c test.cpp -o ./tmp/o/test_hello.o
+clang++-12 -Xclang -load -Xclang ./tmp/so/instrument.so -c src/test.cpp -o ./tmp/o/test.o
+# clang++-12 -Xclang -load -Xclang ./tmp/so/instrument.so -c src/test.cpp -o ./tmp/o/test.ll
+# clang++-12 -Xclang -load -Xclang ./tmp/so/hello.so -c src/test.cpp -o ./tmp/o/test_hello.o
 
-# 编译 instrumentFunc.cpp 生成链接文件 instrumentFunc.o
-clang++-12 -c ./src/llvm_src/instrumentFunc.cpp -o ./tmp/o/instrumentFunc.o
+# 编译 instrument_func.cpp 生成链接文件 instrument_func.o
+clang++-12 -c ./src/instrument_func.cpp -o ./tmp/o/instrument_func.o
 
-clang++-12 ./tmp/o/instrumentFunc.o ./tmp/o/test.o -o bin/test
+clang++-12 ./tmp/o/instrument_func.o ./tmp/o/test.o -o bin/test
+
+clang++-12 src/loop.cpp -o bin/loop
