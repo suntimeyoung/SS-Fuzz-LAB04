@@ -31,13 +31,13 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     Module *M = F.getParent();
     LLVMContext &Context = M->getContext();
       
-    // create `logBasic`.
-    FunctionCallee logFunc = M->getOrInsertFunction("logBasic", Type::getVoidTy(Context), Type::getInt64Ty(Context));
+    // create `LogBasic`.
+    FunctionCallee logFunc = M->getOrInsertFunction("LogBasic", Type::getVoidTy(Context), Type::getInt64Ty(Context));
 
-    // instrument `forkserver` in the entrypoint.
+    // instrument `Forkserver` in the entrypoint.
     if (F.getName() == "main") {
         IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
-        FunctionCallee forkServer = M->getOrInsertFunction("forkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
+        FunctionCallee forkServer = M->getOrInsertFunction("ForkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
         forkBuilder.CreateCall(forkServer);
     }
       
@@ -46,7 +46,7 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         uint64_t randomValue = dist(rng);
         Value *logArg = ConstantInt::get(Type::getInt64Ty(Context), randomValue);
             
-        // instrument `logBasic` in every block.
+        // instrument `LogBasic` in every block.
         IRBuilder<> logBuilder(&(*(B.getFirstInsertionPt())));
         logBuilder.CreateCall(logFunc, {logArg});
             

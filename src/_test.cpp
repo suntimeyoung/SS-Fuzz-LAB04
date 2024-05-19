@@ -1,20 +1,25 @@
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
+#include "loop.hpp"
 
-#include <cstdio>
-#include <iostream>
-#include <fstream>
+int FuncA(int);
+int FuncB(int);
+int FuncC(int, int);
+void ForkServer();
 
-using namespace std;
+int main () {
 
-#define LOG_FILE "log/branch_log.txt"
-#define FIFO_DATA "/tmp/fuzz_fifo_data"
-#define FIFO_INST "/tmp/fuzz_fifo_inst"
-#define BUFFER_SIZE 1024
-#define TEST_INSTANCE_NUM 20
-#define CONTINUE_INST 0
-#define WAIT_INST 1
+    ForkServer();
+
+    int a, b;
+    int cnt = 2;
+    do {
+        std::cin >> a >> b;
+        if (a > b)
+            std::cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << std::endl;
+        std::cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << std::endl;  
+    } while (--cnt > 0);
+
+    return 0;
+}
 
 int FuncA(int a) {
     return 2*a;
@@ -31,9 +36,9 @@ int FuncC(int a, int b) {
     return a - b;
 }
 
-void forkServer() {
+void ForkServer() {
     int times = 0;
-    char buffer[BUFFER_SIZE + 1];
+    char buf[PIPE_BUF_SIZE + 1];
 
     int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
     if (data_pipe_fd == -1) {
@@ -57,11 +62,11 @@ void forkServer() {
         } else {
             // child
 
-            // get test input file path (stored in `buffer`) from data pipe.
-            if (read(data_pipe_fd, buffer, BUFFER_SIZE) > 0) {
+            // get test input file path (stored in `buf`) from data pipe.
+            if (read(data_pipe_fd, buf, PIPE_BUF_SIZE) > 0) {
                 // pipe test input file to `stdin`.
-                freopen(buffer, "r", stdin);
-                std::cout << "\n(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buffer << " to the stdin of child." << std::endl;
+                freopen(buf, "r", stdin);
+                std::cout << "\n(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buf << " to the stdin of child." << std::endl;
             } else {
                 fprintf(stderr, "Read error on pipe %s\n", FIFO_DATA);
                 exit(EXIT_FAILURE);
@@ -75,24 +80,4 @@ void forkServer() {
 
     (void)close(data_pipe_fd);
     exit(EXIT_SUCCESS);
-}
-
-int main () {
-
-    forkServer();
-
-    int a, b;
-    int cnt = 2;
-
-    do {
-        cin >> a >> b;
-
-        if (a > b) {
-            cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
-        }
-
-        cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
-    } while (--cnt > 0);
-
-    return 0;
 }

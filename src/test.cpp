@@ -22,14 +22,10 @@ int FuncC(int a, int b) {
 int main () {
     int a, b;
     int cnt = 2;
-
     do {
         cin >> a >> b;
-
-        if (a > b) {
+        if (a > b)
             cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
-        }
-
         cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
     } while (--cnt > 0);
 
