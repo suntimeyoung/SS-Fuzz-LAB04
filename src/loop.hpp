@@ -9,11 +9,11 @@
 #include <iostream>
 #include <fstream>
 
-#define LOG_FILE "/tmp/fuzzlab/fuzz_log.txt"
-#define TEST_PATH "/tmp/fuzzlab/bin/test"
-#define TEST_DIR "/tmp/fuzzlab/testcases/"
-#define FIFO_DATA "/tmp/fuzzlab/fuzz_fifo_data"
-#define FIFO_INST "/tmp/fuzzlab/fuzz_fifo_inst"
+#define LOG_FILE "/tmp/.fuzzlab/fuzz_log.txt"
+#define TEST_PATH "/tmp/.fuzzlab/bin/test"
+#define TEST_DIR "/tmp/.fuzzlab/testcases/"
+#define FIFO_DATA "/tmp/.fuzzlab/fuzz_fifo_data"
+#define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
 #define PIPE_BUF_SIZE 1024
 #define TEST_INSTANCE_NUM 20
 #define CONTINUE_INST 0
