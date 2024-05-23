@@ -29,8 +29,8 @@ int main() {
 
     shmdt(pshm);
 
-    // if (shmctl(shmid, IPC_RMID, 0) == -1) {
-    //     std::cout << "shmctl(" << SHM_KEY_ << ") failed." << std::endl;
-    // }
+    if (shmctl(shmid, IPC_RMID, 0) == -1) {
+        std::cout << "shmctl(" << SHM_KEY_ << ") failed." << std::endl;
+    }
 
 }

@@ -94,7 +94,6 @@ void MakeFileFromSeed(const char *file_name, int seed) {
     std::ofstream test_input(file_name);
     test_input << seed/2+3 << " " << seed/2+2 <<  "\n";
     test_input << seed/2 << " " << seed/2+1 <<  "\n";
-    sleep(1);
     test_input.close();
 }
 

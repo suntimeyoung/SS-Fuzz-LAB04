@@ -47,7 +47,7 @@ extern "C" void ForkServer() {
             //         exit(EXIT_SUCCESS);
             //     }
             // }
-            if (times > TEST_INSTANCE_NUM) {
+            if (times == TEST_INSTANCE_NUM - 1) {
                 exit(EXIT_SUCCESS);
             }
 
