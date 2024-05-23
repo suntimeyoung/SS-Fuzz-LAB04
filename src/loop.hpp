@@ -17,7 +17,7 @@
 #define PIPE_BUF_SIZE 1024
 #define TEST_INSTANCE_NUM 20
 #define CONTINUE_INST 0
-#define WAIT_INST 1
+#define EXIT_INST 1
 #define FSHM_KEY 0x7777
 #define FSHM_TYPE unsigned long long
 #define FSHM_MAX_ITEM 1024
@@ -29,4 +29,4 @@ void ReadSharedMem(char *buf, int buf_size);
 void WriteSharedMem(const char *buf, int pos, int offset);
 void DeleteSharedMem(int shmid);
 void MakeFileFromSeed(const char *file_name, int seed);
-void SendInst(int continue_or_wait);
+void SendInst(const int inst_pipe_fd, int continue_or_wait);

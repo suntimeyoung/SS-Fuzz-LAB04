@@ -21,10 +21,17 @@ extern "C" void LogBasic(unsigned long long address) {
 extern "C" void ForkServer() {
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
+    char inst[PIPE_BUF_SIZE + 1];
 
     int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
     if (data_pipe_fd == -1) {
         fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
+        exit(EXIT_FAILURE);
+    }
+
+    int inst_pipe_fd = open(FIFO_INST, O_RDONLY);
+    if (inst_pipe_fd == -1) {
+        fprintf(stderr, "Open error on named pipe: %s\n", FIFO_INST);
         exit(EXIT_FAILURE);
     }
 
@@ -34,9 +41,13 @@ extern "C" void ForkServer() {
         if (pid > 0) {
             // parent
 
-            // simulate getting some instructions to stop.
-            if (times == TEST_INSTANCE_NUM - 1) {
-                // sleep(10);
+            // get some instructions to stop.
+            // if (read(inst_pipe_fd, inst, PIPE_BUF_SIZE) > 0) {
+            //     if ((int)(*inst) == EXIT_INST) {
+            //         exit(EXIT_SUCCESS);
+            //     }
+            // }
+            if (times > TEST_INSTANCE_NUM) {
                 exit(EXIT_SUCCESS);
             }
 
@@ -47,7 +58,7 @@ extern "C" void ForkServer() {
             if (read(data_pipe_fd, buf, PIPE_BUF_SIZE) > 0) {
                 // pipe test input file to `stdin`.
                 freopen(buf, "r", stdin);
-                std::cout << "\n(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buf << " to the stdin of child." << std::endl;
+                std::cout << "(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buf << " to the stdin of child." << std::endl << std::endl;
             } else {
                 fprintf(stderr, "Read error on pipe %s\n", FIFO_DATA);
                 exit(EXIT_FAILURE);
@@ -59,7 +70,9 @@ extern "C" void ForkServer() {
         times ++;
     }
 
+    (void)close(inst_pipe_fd);
     (void)close(data_pipe_fd);
+
     exit(EXIT_SUCCESS);
 }
 

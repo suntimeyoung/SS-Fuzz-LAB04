@@ -6,38 +6,46 @@ int main() {
     if (pid > 0) {
         // parent
 
-        int data_pipe_fd;
         int tested_instance = 0;
 
         CreateNamedPipe(FIFO_INST);
         CreateNamedPipe(FIFO_DATA);
 
-        data_pipe_fd = open(FIFO_DATA, O_WRONLY);
-        if (data_pipe_fd != -1) {
-            while (tested_instance < TEST_INSTANCE_NUM) {
-
-                // prepare test input file and store its path in `buf` (to be sent to data pipe).
-                char buf[PIPE_BUF_SIZE + 1];
-                snprintf(buf, PIPE_BUF_SIZE, "%sfile_%d", TEST_DIR, tested_instance++);
-                std::cout << "loop: make test input file stored in: " << buf << std::endl;
-
-                // simulate getting some test input from seed.
-                MakeFileFromSeed(buf, tested_instance * tested_instance + 100 * tested_instance);
-
-                // send the test input file to data pipe.
-                if (write(data_pipe_fd, buf, PIPE_BUF_SIZE) == -1) {
-                    fprintf(stderr, "Write error on pipe %s\n", FIFO_DATA);
-                    exit(EXIT_FAILURE);
-                }
-
-            }
-
-            (void)close(data_pipe_fd);
-
-        } else {
+        int data_pipe_fd = open(FIFO_DATA, O_WRONLY);
+        if (data_pipe_fd == -1) {
             fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
             exit(EXIT_FAILURE);
         }
+
+        int inst_pipe_fd = open(FIFO_INST, O_WRONLY);
+        if (inst_pipe_fd == -1) {
+            fprintf(stderr, "Open error on named pipe: %s\n", FIFO_INST);
+            exit(EXIT_FAILURE);
+        }
+
+
+        while (tested_instance < TEST_INSTANCE_NUM) {
+
+            // prepare test input file and store its path in `buf` (to be sent to data pipe).
+            char buf[PIPE_BUF_SIZE + 1];
+            snprintf(buf, PIPE_BUF_SIZE, "%sfile_%d", TEST_DIR, tested_instance++);
+
+            // simulate getting some test input from seed.
+            MakeFileFromSeed(buf, tested_instance * tested_instance + 100 * tested_instance);
+            std::cout << "\nloop: make test input file stored in: " << buf << std::endl;
+
+            // send the test input file to data pipe.
+            if (write(data_pipe_fd, buf, PIPE_BUF_SIZE) == -1) {
+                fprintf(stderr, "Write error on pipe %s\n", FIFO_DATA);
+                exit(EXIT_FAILURE);
+            }
+
+        }
+
+        SendInst(inst_pipe_fd, EXIT_INST);
+
+        (void)close(inst_pipe_fd);
+        (void)close(data_pipe_fd);
 
     } else if (pid == 0) {
         // child
@@ -86,11 +94,11 @@ void MakeFileFromSeed(const char *file_name, int seed) {
     std::ofstream test_input(file_name);
     test_input << seed/2+3 << " " << seed/2+2 <<  "\n";
     test_input << seed/2 << " " << seed/2+1 <<  "\n";
+    sleep(1);
     test_input.close();
 }
 
-void SendInst(const int continue_or_wait) {
-    int inst_pipe_fd = open(FIFO_INST, O_WRONLY);
+void SendInst(const int inst_pipe_fd, const int continue_or_wait) {
     if (inst_pipe_fd != -1) {
         if (write(inst_pipe_fd, &continue_or_wait, sizeof(continue_or_wait)) == -1) {
             fprintf(stderr, "Write error on pipe %s\n", FIFO_INST);
@@ -100,5 +108,4 @@ void SendInst(const int continue_or_wait) {
         fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
         exit(EXIT_FAILURE);
     }
-    (void)close(inst_pipe_fd);
 }
