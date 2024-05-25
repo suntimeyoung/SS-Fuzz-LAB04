@@ -42,14 +42,18 @@ extern "C" void ForkServer() {
             // parent
 
             // get some instructions to stop.
-            // if (read(inst_pipe_fd, inst, PIPE_BUF_SIZE) > 0) {
-            //     if ((int)(*inst) == EXIT_INST) {
-            //         exit(EXIT_SUCCESS);
-            //     }
-            // }
+            if (read(inst_pipe_fd, inst, PIPE_BUF_SIZE) > 0) {
+                if (*((int *)inst) == EXIT_INST) {
+                    std::cout << "EXIT FROM POINT 1." << std::endl;
+                    exit(EXIT_SUCCESS);
+                }
+            }
+
             if (times == TEST_INSTANCE_NUM - 1) {
+                std::cout << "EXIT FROM POINT 2." << std::endl;
                 exit(EXIT_SUCCESS);
             }
+
 
         } else {
             // child
