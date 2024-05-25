@@ -15,12 +15,13 @@
 #define FIFO_DATA "/tmp/.fuzzlab/fuzz_fifo_data"
 #define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
 #define PIPE_BUF_SIZE 1024
-#define TEST_INSTANCE_NUM 20
+#define TEST_INSTANCE_NUM 1
 #define CONTINUE_INST 0
 #define EXIT_INST 1
 #define FSHM_KEY 0x7777
-#define FSHM_TYPE unsigned long long
-#define FSHM_MAX_ITEM 1024
+#define SHM_COUNTER_TYPE Int32Ty
+#define FSHM_TYPE unsigned int
+#define FSHM_MAX_ITEM_POW2 16
 
 
 void CreateNamedPipe(const char *fifo_path);
