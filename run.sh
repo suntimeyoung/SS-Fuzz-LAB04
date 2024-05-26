@@ -26,12 +26,15 @@ $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.o
 # $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.ll
 # $CLANG_COMPILER -Xclang -load -Xclang ./hello.so -c src/test.cpp -o test_hello.o
 
-# 编译 instrument_func.cpp 生成链接文件 instrument_func.o
-$CLANG_COMPILER -c src/instrument_func.cpp -o instrument_func.o
+# 编译 instrument_func.cpp, loop.cpp 生成链接文件 instrument_func.o, loop.o
+$CLANG_COMPILER -c -Isrc/instrument_func.hpp src/instrument_func.cpp -o instrument_func.o
+$CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o loop.o
+$CLANG_COMPILER -c src/main.cpp -o main.o
 
-$CLANG_COMPILER instrument_func.o test.o -o bin/test
+$CLANG_COMPILER instrument_func.o test.o loop.o -o bin/test
 
-$CLANG_COMPILER -Isrc/loop.hpp src/loop.cpp -o bin/loop
+$CLANG_COMPILER loop.o main.o -o bin/main
+
 
 rm -rf *.o *.so
 cp -r bin/* /tmp/.fuzzlab/bin/

@@ -1,14 +1,10 @@
+#include "instrument_func.hpp"
 #include "loop.hpp"
-#include <set>
 
-unsigned long long last_add = 0;
-std::set<unsigned long long> branches;
+FSHM_TYPE *__afl_area_ptr;
+int *__afl_prev_loc;
 
-extern "C" FSHM_TYPE *__afl_area_ptr;
-extern "C" int *__afl_prev_loc;
-static int prev_loc = 0;
-
-extern "C" void ForkServer() {
+extern void ForkServer() {
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
     char inst_buf[PIPE_BUF_SIZE + 1];
@@ -25,13 +21,7 @@ extern "C" void ForkServer() {
         exit(EXIT_FAILURE);
     }
 
-    /* Create a SHM with TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
-    int shmid;
-    
-    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0640|IPC_CREAT)) == -1) {
-        fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
-        exit(EXIT_FAILURE);
-    }
+    int shmid = GetOrCreateSharedMem();
 
     /* Attach the SHM to its own memory */
     __afl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
@@ -82,3 +72,26 @@ extern "C" void ForkServer() {
     exit(EXIT_SUCCESS);
 }
 
+int GetOrCreateSharedMem() {
+    int shmid;
+    
+    /* Create a SHM with TEST_INSTANCE_NUM rows and (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
+    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0640|IPC_CREAT)) == -1) {
+        fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
+        exit(EXIT_FAILURE);
+    } else {
+        return shmid;
+    }
+}
+
+void ReadSharedMem(char *buf, int buf_size) {
+
+}
+
+void WriteSharedMem(const char *buf, int pos, int offset) {
+
+}
+
+void DeleteSharedMem(int shmid) {
+
+}

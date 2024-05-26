@@ -12,7 +12,7 @@
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
 #include "loop.hpp"
-
+#include "instrument_func.hpp"
 
 using namespace llvm;
 
@@ -74,7 +74,7 @@ bool InstrumentFunc::runOnFunction(Function &F) {
 
         /* Update bitmap */
         LoadInst *Counter = IRB.CreateLoad(Int32Ty, MapPtrIdx);
-        Value *Incr = IRB.CreateAdd(Counter, ConstantInt::get(SHM_COUNTER_TYPE, 1));
+        Value *Incr = IRB.CreateAdd(Counter, ConstantInt::get(FSHM_COUNTER_TYPE, 1));
         IRB.CreateStore(Incr, MapPtrIdx);
 
         /* Set prev_loc to cur_loc >> 1 */
