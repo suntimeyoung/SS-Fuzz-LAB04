@@ -33,7 +33,7 @@ int main() {
             // simulate getting some test input from seed.
             MakeFileFromSeed(buf, tested_instance * tested_instance + 100 * tested_instance);
             std::cout << "\nloop: make test input file stored in: " << buf << std::endl;
-            SendInst(inst_pipe_fd, CONTINUE_INST);
+            SendInst(inst_pipe_fd, tested_instance == TEST_INSTANCE_NUM ? EXIT_INST : CONTINUE_INST);
 
             // send the test input file to data pipe.
             if (write(data_pipe_fd, buf, PIPE_BUF_SIZE) == -1) {
@@ -43,7 +43,6 @@ int main() {
 
         }
 
-        SendInst(inst_pipe_fd, EXIT_INST);
 
         (void)close(inst_pipe_fd);
         (void)close(data_pipe_fd);

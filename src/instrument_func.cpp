@@ -21,7 +21,7 @@ extern "C" void LogBasic(unsigned long long address) {
 extern "C" void ForkServer() {
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
-    char inst[PIPE_BUF_SIZE + 1];
+    char inst_buf[PIPE_BUF_SIZE + 1];
 
     int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
     if (data_pipe_fd == -1) {
@@ -42,18 +42,15 @@ extern "C" void ForkServer() {
             // parent
 
             // get some instructions to stop.
-            if (read(inst_pipe_fd, inst, PIPE_BUF_SIZE) > 0) {
-                if (*((int *)inst) == EXIT_INST) {
-                    std::cout << "EXIT FROM POINT 1." << std::endl;
+            if (read(inst_pipe_fd, inst_buf, PIPE_BUF_SIZE) > 0) {
+                int inst = *((int *)inst_buf);
+                std::cout << "(times:"<< times << ") Parent (pid:" << getpid() << "): get instruction " 
+                    << ( inst == EXIT_INST ? "EXIT_INST" : "CONTINURE_INST" )
+                    << " to the stdin of child." << std::endl << std::endl;
+                if (inst == EXIT_INST) {
                     exit(EXIT_SUCCESS);
                 }
             }
-
-            if (times == TEST_INSTANCE_NUM - 1) {
-                std::cout << "EXIT FROM POINT 2." << std::endl;
-                exit(EXIT_SUCCESS);
-            }
-
 
         } else {
             // child

@@ -10,6 +10,8 @@ if ! [ -x "$(command -v $LLVM_CONFIG)" ]; then
   exit 1
 fi
 
+./mkfuzzdir.sh
+
 # 获取编译器和链接器的标志
 CXXFLAGS=$($LLVM_CONFIG --cxxflags)
 LDFLAGS=$($LLVM_CONFIG --ldflags)
