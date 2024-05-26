@@ -4,19 +4,9 @@
 unsigned long long last_add = 0;
 std::set<unsigned long long> branches;
 
-
-extern "C" void LogBasic(unsigned long long address) {
-
-    branches.insert((address << 1) ^ last_add);
-    last_add = address;
-
-    static FILE *logFile = NULL;
-    if (!logFile) {
-        logFile = fopen(LOG_FILE, "w");
-    }
-    fprintf(logFile, "Branches count: %lu\n", branches.size());
-
-}
+extern "C" FSHM_TYPE *__afl_area_ptr;
+extern "C" int *__afl_prev_loc;
+static int prev_loc = 0;
 
 extern "C" void ForkServer() {
     int times = 0;
@@ -34,6 +24,21 @@ extern "C" void ForkServer() {
         fprintf(stderr, "Open error on named pipe: %s\n", FIFO_INST);
         exit(EXIT_FAILURE);
     }
+
+    /* Create a SHM with TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
+    int shmid;
+    
+    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0640|IPC_CREAT)) == -1) {
+        fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Attach the SHM to its own memory */
+    __afl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
+
+    /* Allocate memory for the prev_loc */
+    __afl_prev_loc = &prev_loc;
+    
 
     while (true) {
         pid_t pid = fork();

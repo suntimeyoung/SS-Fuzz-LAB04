@@ -3,6 +3,7 @@
 # 确定 LLVM 的版本和工具的位置
 # LLVM_CONFIG="llvm-config-12"
 LLVM_CONFIG="llvm-config"
+CLANG_COMPILER="clang++-14"
 
 # 检查 llvm-config 工具是否可用
 if ! [ -x "$(command -v $LLVM_CONFIG)" ]; then
@@ -17,20 +18,20 @@ CXXFLAGS=$($LLVM_CONFIG --cxxflags)
 LDFLAGS=$($LLVM_CONFIG --ldflags)
 
 # 编译 instrument.cpp 生成共享库 instrument.so
-clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/instrument.cpp -o instrument.so $LDFLAGS
-# clang++-12 $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/hello.cpp -o hello.so $LDFLAGS
+$CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/instrument.cpp -o instrument.so $LDFLAGS
+# $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/hello.cpp -o hello.so $LDFLAGS
 
 # 使用 instrument.so 处理 test.cpp
-clang++-12 -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.o
-# clang++-12 -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.ll
-# clang++-12 -Xclang -load -Xclang ./hello.so -c src/test.cpp -o test_hello.o
+$CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.o
+# $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.ll
+# $CLANG_COMPILER -Xclang -load -Xclang ./hello.so -c src/test.cpp -o test_hello.o
 
 # 编译 instrument_func.cpp 生成链接文件 instrument_func.o
-clang++-12 -c src/instrument_func.cpp -o instrument_func.o
+$CLANG_COMPILER -c src/instrument_func.cpp -o instrument_func.o
 
-clang++-12 instrument_func.o test.o -o bin/test
+$CLANG_COMPILER instrument_func.o test.o -o bin/test
 
-clang++-12 -Isrc/loop.hpp src/loop.cpp -o bin/loop
+$CLANG_COMPILER -Isrc/loop.hpp src/loop.cpp -o bin/loop
 
 rm -rf *.o *.so
 cp -r bin/* /tmp/.fuzzlab/bin/

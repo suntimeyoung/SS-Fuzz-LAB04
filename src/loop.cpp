@@ -70,7 +70,9 @@ void CreateNamedPipe(const char *fifo_path) {
 
 int GetOrCreateSharedMem() {
     int shmid;
-    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*FSHM_MAX_ITEM, 0640|IPC_CREAT)) == -1) {
+    
+    /* Create a SHM with TEST_INSTANCE_NUM rows and (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
+    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0640|IPC_CREAT)) == -1) {
         fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
         exit(EXIT_FAILURE);
     } else {
