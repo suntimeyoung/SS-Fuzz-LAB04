@@ -42,7 +42,7 @@ extern "C" void ForkServer() {
             // parent
 
             // get some instructions to stop.
-            if (read(inst_pipe_fd, inst_buf, PIPE_BUF_SIZE) > 0) {
+            if (read(inst_pipe_fd, inst_buf, sizeof(int)) > 0) {
                 int inst = *((int *)inst_buf);
                 std::cout << "(times:"<< times << ") Parent (pid:" << getpid() << "): get instruction " 
                     << ( inst == EXIT_INST ? "EXIT_INST" : "CONTINURE_INST" )
