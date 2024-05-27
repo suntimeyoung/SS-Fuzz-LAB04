@@ -20,7 +20,6 @@ int FuncC(int a, int b) {
 }
 
 int main () {
-    cout << "This is test running" << endl;
     int a, b;
     int cnt = 2;
     do {

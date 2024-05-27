@@ -32,6 +32,7 @@ int main() {
             // simulate getting some test input from seed.
             MakeFileFromSeed(buf, tested_instance * tested_instance + 100 * tested_instance);
             std::cout << "\nloop: make test input file stored in: " << buf << std::endl;
+            SendInst(inst_pipe_fd, tested_instance == TEST_INSTANCE_NUM ? EXIT_INST : CONTINUE_INST);
 
             // send the test input file to data pipe.
             if (write(data_pipe_fd, buf, PIPE_BUF_SIZE) == -1) {
@@ -50,11 +51,7 @@ int main() {
         // child
 
         // execute tested program.
-        std::cout << "here-5" << std::endl;
-        if (execl(TEST_PATH, TEST_PATH, NULL) == -1) {
-            perror("execl failed");
-            return 1; // 返回非零值表示有错误发生
-        }
+        execl(TEST_PATH, TEST_PATH, NULL);
 
         fprintf(stderr, "Could not execl program %s\n", TEST_PATH);
         exit(EXIT_FAILURE);

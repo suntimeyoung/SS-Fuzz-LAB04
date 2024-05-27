@@ -75,8 +75,6 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         uint32_t cur_loc = dist(rng) % (1 << FSHM_MAX_ITEM_POW2);
         ConstantInt *CurLoc = ConstantInt::get(Int32Ty, cur_loc);
 
-        std::cout << F.getName().data() << ": " << cur_loc << std::endl;
-
         /* Load prev_loc */
         LoadInst *PrevLoc = IRB.CreateLoad(Int32Ty, AFLPrevLoc);
         Value *PrevLocCasted = IRB.CreateZExt(PrevLoc, IRB.getInt32Ty());
@@ -93,7 +91,6 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         // Call the new function 'UpdateCoverageMap'
         // IRB.CreateCall(updateCovMap, {IRB.CreateXor(PrevLocCasted, CurLoc), MapPtrIdx});
         
-
         /* Set prev_loc to cur_loc >> 1 */
         IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
     }

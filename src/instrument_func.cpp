@@ -19,7 +19,7 @@ extern "C" void UpdateCoverageMap(int32_t Incr, int32_t* MapPtrIdx) {
 extern "C" void ForkServer() {
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
-    char inst[PIPE_BUF_SIZE + 1];
+    char inst_buf[PIPE_BUF_SIZE + 1];
 
     int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
     if (data_pipe_fd == -1) {
@@ -35,7 +35,6 @@ extern "C" void ForkServer() {
 
     /* Create a SHM with TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
     int shmid;
-    
     if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0666|IPC_CREAT)) == -1) {
         fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
         exit(EXIT_FAILURE);
@@ -45,9 +44,6 @@ extern "C" void ForkServer() {
     __afl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
     __afl_prev_loc = 0;
     
-    std::cout << "__afl_area_ptr = " << __afl_area_ptr << std::endl;
-    std::cout << "__afl_prev_loc = " << __afl_prev_loc << std::endl;
-
     while (true) {
         pid_t pid = fork();
 
@@ -55,13 +51,14 @@ extern "C" void ForkServer() {
             // parent
 
             // get some instructions to stop.
-            // if (read(inst_pipe_fd, inst, PIPE_BUF_SIZE) > 0) {
-            //     if ((int)(*inst) == EXIT_INST) {
-            //         exit(EXIT_SUCCESS);
-            //     }
-            // }
-            if (times == TEST_INSTANCE_NUM - 1) {
-                exit(EXIT_SUCCESS);
+            if (read(inst_pipe_fd, inst_buf, sizeof(int)) > 0) {
+                int inst = *((int *)inst_buf);
+                std::cout << "(times:"<< times << ") Parent (pid:" << getpid() << "): get instruction " 
+                    << ( inst == EXIT_INST ? "EXIT_INST" : "CONTINURE_INST" )
+                    << " to the stdin of child." << std::endl << std::endl;
+                if (inst == EXIT_INST) {
+                    exit(EXIT_SUCCESS);
+                }
             }
 
         } else {
