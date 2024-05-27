@@ -32,6 +32,10 @@ namespace {
 char InstrumentFunc::ID = 0;
 
 bool InstrumentFunc::runOnFunction(Function &F) {
+    if (F.getName() == "__cxx_global_var_init" || F.getName() == "_GLOBAL__sub_I_test.cpp") {
+        return true;
+    }
+    
     Module *M = F.getParent();
     Module &ModuleRef = *M;
     LLVMContext &Context = M->getContext();
@@ -44,7 +48,7 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     GlobalVariable *AFLMapPtr = M->getGlobalVariable("__afl_area_ptr");
     if (!AFLMapPtr) {
         AFLMapPtr = new GlobalVariable(
-            ModuleRef, Int32Ty, false,
+            ModuleRef, PointerType::getUnqual(Int32Ty), false,
             GlobalValue::ExternalLinkage, nullptr, "__afl_area_ptr");
     }
 
@@ -55,12 +59,12 @@ bool InstrumentFunc::runOnFunction(Function &F) {
             nullptr, GlobalVariable::GeneralDynamicTLSModel, 0, false);
     }
 
-    // instrument `Forkserver` in the entrypoint.
-    if (F.getName() == "main") {
-        IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
-        FunctionCallee forkServer = M->getOrInsertFunction("ForkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
-        forkBuilder.CreateCall(forkServer);
-    }
+    // Define or get the existing 'UpdateCoverageMap' function
+    FunctionCallee updateCovMap = M->getOrInsertFunction(
+        "UpdateCoverageMap",
+        FunctionType::get(Type::getVoidTy(Context), {Int32Ty, PointerType::getUnqual(Int32Ty)}, false)
+    );
+
       
     for (auto &B : F) {
         IRBuilder<> IRB(&(*(B.getFirstInsertionPt())));
@@ -82,10 +86,31 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         Value *Incr = IRB.CreateAdd(Counter, ConstantInt::get(Int32Ty, 1));
         IRB.CreateStore(Incr, MapPtrIdx);
 
+        // Call the new function 'UpdateCoverageMap'
+        // IRB.CreateCall(updateCovMap, {IRB.CreateXor(PrevLocCasted, CurLoc), MapPtrIdx});
+        
+
         /* Set prev_loc to cur_loc >> 1 */
         IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
     }
 
+    // instrument `Forkserver` in the entrypoint.
+    if (F.getName() == "main") {
+        errs() << "Inserting into main\n";
+        IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
+        FunctionCallee forkServer = M->getOrInsertFunction(
+            "ForkServer",
+            FunctionType::get(Type::getVoidTy(Context), {}, false) // Assuming ForkServer takes no parameters
+        );
+        CallInst* callInst = forkBuilder.CreateCall(forkServer);
+
+        if (callInst != nullptr) {
+            errs() << "Successfully inserted call to ForkServer in function: " << F.getName() << "\n";
+        } else {
+            errs() << "Failed to insert call to ForkServer in function: " << F.getName() << "\n";
+        }
+        return true;
+    }
     return true;
 }
 
