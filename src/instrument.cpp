@@ -64,6 +64,8 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         uint32_t cur_loc = dist(rng) % (1 << FSHM_MAX_ITEM_POW2); // using the FSHM_MAX_ITEM_POW2 to constrain the range of the random value
         ConstantInt *CurLoc = ConstantInt::get(Int32Ty, cur_loc);
 
+        std::cout << "Current Location Hash is: " << cur_loc << std::endl;
+
         /* Load prev_loc */
         LoadInst *PrevLoc = IRB.CreateLoad(Int32Ty, AFLPrevLoc);
         Value *PrevLocCasted = IRB.CreateZExt(PrevLoc, IRB.getInt32Ty());

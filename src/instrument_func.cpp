@@ -5,6 +5,8 @@ FSHM_TYPE *__afl_area_ptr;
 int *__afl_prev_loc;
 
 extern void ForkServer() {
+    std::cout << "ForkServer HERE" << std::endl;
+
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
     char inst_buf[PIPE_BUF_SIZE + 1];

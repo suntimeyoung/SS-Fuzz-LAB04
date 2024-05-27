@@ -11,11 +11,15 @@ int main() {
         CreateNamedPipe(FIFO_INST);
         CreateNamedPipe(FIFO_DATA);
 
+        std::cout << "HERE" << std::endl;
+
         int data_pipe_fd = open(FIFO_DATA, O_WRONLY);
         if (data_pipe_fd == -1) {
             fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
             exit(EXIT_FAILURE);
         }
+
+        std::cout << "HERE" << std::endl;
 
         int inst_pipe_fd = open(FIFO_INST, O_WRONLY);
         if (inst_pipe_fd == -1) {

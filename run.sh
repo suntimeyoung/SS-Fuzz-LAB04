@@ -3,7 +3,7 @@
 # 确定 LLVM 的版本和工具的位置
 # LLVM_CONFIG="llvm-config-12"
 LLVM_CONFIG="llvm-config"
-CLANG_COMPILER="clang++-14"
+CLANG_COMPILER="clang++-12"
 
 # 检查 llvm-config 工具是否可用
 if ! [ -x "$(command -v $LLVM_CONFIG)" ]; then
