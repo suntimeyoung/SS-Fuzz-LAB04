@@ -41,13 +41,19 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     /* Get globals for the SHM region and the previous location. Note that
      __afl_prev_loc is thread-local. */
 
-    GlobalVariable *AFLMapPtr = new GlobalVariable(
-        ModuleRef, PointerType::get(Int32Ty, 0), false,
-        GlobalValue::ExternalLinkage, 0, "__afl_area_ptr");
+    GlobalVariable *AFLMapPtr = M->getGlobalVariable("__afl_area_ptr");
+    if (!AFLMapPtr) {
+        AFLMapPtr = new GlobalVariable(
+            ModuleRef, Int32Ty, false,
+            GlobalValue::ExternalLinkage, nullptr, "__afl_area_ptr");
+    }
 
-    GlobalVariable *AFLPrevLoc = new GlobalVariable(
-      ModuleRef, Int32Ty, false, GlobalValue::ExternalLinkage, 0, "__afl_prev_loc",
-      0, GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    GlobalVariable *AFLPrevLoc = M->getGlobalVariable("__afl_prev_loc");
+    if (!AFLPrevLoc) {
+        AFLPrevLoc = new GlobalVariable(
+            ModuleRef, Int32Ty, false, GlobalValue::ExternalLinkage, nullptr, "__afl_prev_loc",
+            nullptr, GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
 
     // instrument `Forkserver` in the entrypoint.
     if (F.getName() == "main") {
@@ -57,11 +63,10 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     }
       
     for (auto &B : F) {
-
         IRBuilder<> IRB(&(*(B.getFirstInsertionPt())));
 
         /* Generate the current location of the bb by random value */
-        uint32_t cur_loc = dist(rng) % (1 << FSHM_MAX_ITEM_POW2); // using the FSHM_MAX_ITEM_POW2 to constrain the range of the random value
+        uint32_t cur_loc = dist(rng) % (1 << FSHM_MAX_ITEM_POW2);
         ConstantInt *CurLoc = ConstantInt::get(Int32Ty, cur_loc);
 
         /* Load prev_loc */
@@ -69,19 +74,18 @@ bool InstrumentFunc::runOnFunction(Function &F) {
         Value *PrevLocCasted = IRB.CreateZExt(PrevLoc, IRB.getInt32Ty());
 
         /* Load SHM ptr */
-        LoadInst *MapPtr = IRB.CreateLoad(Int32Ty, AFLMapPtr);
-        Value *MapPtrIdx = IRB.CreateGEP(Int32Ty, MapPtr, IRB.CreateXor(PrevLocCasted, CurLoc));
+        LoadInst *MapPtr = IRB.CreateLoad(PointerType::getUnqual(Int32Ty), AFLMapPtr); // Ensure correct pointer type is used
+        Value *MapPtrIdx = IRB.CreateGEP(Int32Ty, MapPtr, IRB.CreateXor(PrevLocCasted, CurLoc)); // GEP needs correct pointer types
 
         /* Update bitmap */
         LoadInst *Counter = IRB.CreateLoad(Int32Ty, MapPtrIdx);
-        Value *Incr = IRB.CreateAdd(Counter, ConstantInt::get(SHM_COUNTER_TYPE, 1));
+        Value *Incr = IRB.CreateAdd(Counter, ConstantInt::get(Int32Ty, 1));
         IRB.CreateStore(Incr, MapPtrIdx);
 
         /* Set prev_loc to cur_loc >> 1 */
         IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
-            
-        // errs() << "Inserted log call in basic block with random value: " << randomValue << "\n";
     }
+
     return true;
 }
 

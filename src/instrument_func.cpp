@@ -4,9 +4,14 @@
 unsigned long long last_add = 0;
 std::set<unsigned long long> branches;
 
-extern "C" FSHM_TYPE *__afl_area_ptr;
-extern "C" int *__afl_prev_loc;
-static int prev_loc = 0;
+extern "C" {
+    FSHM_TYPE *__afl_area_ptr;
+    __thread int *__afl_prev_loc;
+}
+
+// FSHM_TYPE *__afl_area_ptr;
+// __thread int * __afl_prev_loc;
+static __thread int prev_loc = 0;
 
 extern "C" void ForkServer() {
     int times = 0;
