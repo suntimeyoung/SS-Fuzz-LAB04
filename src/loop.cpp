@@ -50,7 +50,11 @@ int main() {
         // child
 
         // execute tested program.
-        execl(TEST_PATH, TEST_PATH, NULL);
+        std::cout << "here-5" << std::endl;
+        if (execl(TEST_PATH, TEST_PATH, NULL) == -1) {
+            perror("execl failed");
+            return 1; // 返回非零值表示有错误发生
+        }
 
         fprintf(stderr, "Could not execl program %s\n", TEST_PATH);
         exit(EXIT_FAILURE);

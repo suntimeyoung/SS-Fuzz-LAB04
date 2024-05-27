@@ -6,15 +6,17 @@ std::set<unsigned long long> branches;
 
 extern "C" {
     FSHM_TYPE *__afl_area_ptr;
-    __thread int *__afl_prev_loc;
+    __thread int __afl_prev_loc;
+    // void ForkServer();
 }
 
-// FSHM_TYPE *__afl_area_ptr;
-// __thread int * __afl_prev_loc;
-static __thread int prev_loc = 0;
+extern "C" void UpdateCoverageMap(int32_t Incr, int32_t* MapPtrIdx) {
+    std::cout << "Incr value: " << Incr << std::endl;
+    std::cout << "MapPtrIdx address: " << MapPtrIdx << std::endl;
+    std::cout << "Value at MapPtrIdx: " << *MapPtrIdx << std::endl;
+}
 
 extern "C" void ForkServer() {
-    std::cout << "ForkServer Here" << std::endl;
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
     char inst[PIPE_BUF_SIZE + 1];
@@ -34,17 +36,17 @@ extern "C" void ForkServer() {
     /* Create a SHM with TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
     int shmid;
     
-    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0640|IPC_CREAT)) == -1) {
+    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0666|IPC_CREAT)) == -1) {
         fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
         exit(EXIT_FAILURE);
     }
 
     /* Attach the SHM to its own memory */
     __afl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
-
-    /* Allocate memory for the prev_loc */
-    __afl_prev_loc = &prev_loc;
+    __afl_prev_loc = 0;
     
+    std::cout << "__afl_area_ptr = " << __afl_area_ptr << std::endl;
+    std::cout << "__afl_prev_loc = " << __afl_prev_loc << std::endl;
 
     while (true) {
         pid_t pid = fork();

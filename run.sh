@@ -27,6 +27,7 @@ $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -S -emit-llvm src/test.cpp
 
 # 编译 instrument_func.cpp 生成链接文件 instrument_func.o
 $CLANG_COMPILER -c src/instrument_func.cpp -o instrument_func.o
+$CLANG_COMPILER -S -emit-llvm src/instrument_func.cpp -o instrument_func.ll
 
 $CLANG_COMPILER -g instrument_func.o test.o -o bin/test
 
