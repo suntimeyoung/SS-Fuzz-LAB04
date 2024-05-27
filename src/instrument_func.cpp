@@ -55,7 +55,7 @@ extern "C" void ForkServer() {
                 int inst = *((int *)inst_buf);
                 std::cout << "(times:"<< times << ") Parent (pid:" << getpid() << "): get instruction " 
                     << ( inst == EXIT_INST ? "EXIT_INST" : "CONTINURE_INST" )
-                    << " to the stdin of child." << std::endl << std::endl;
+                    << " from fuzzloop." << std::endl << std::endl;
                 if (inst == EXIT_INST) {
                     exit(EXIT_SUCCESS);
                 }
