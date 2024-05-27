@@ -22,13 +22,13 @@ $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/instrument.
 
 # 使用 instrument.so 处理 test.cpp
 $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.o
-# $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c src/test.cpp -o test.ll
+$CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -S -emit-llvm src/test.cpp -o test.ll
 # $CLANG_COMPILER -Xclang -load -Xclang ./hello.so -c src/test.cpp -o test_hello.o
 
 # 编译 instrument_func.cpp 生成链接文件 instrument_func.o
 $CLANG_COMPILER -c src/instrument_func.cpp -o instrument_func.o
 
-$CLANG_COMPILER instrument_func.o test.o -o bin/test
+$CLANG_COMPILER -g instrument_func.o test.o -o bin/test
 
 $CLANG_COMPILER -Isrc/loop.hpp src/loop.cpp -o bin/loop
 

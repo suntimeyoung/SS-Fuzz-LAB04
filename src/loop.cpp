@@ -8,27 +8,22 @@ int main() {
 
         int tested_instance = 0;
 
-        std::cout << "here-0" << std::endl;
         CreateNamedPipe(FIFO_INST);
         CreateNamedPipe(FIFO_DATA);
 
         int data_pipe_fd = open(FIFO_DATA, O_WRONLY);
         if (data_pipe_fd == -1) {
             fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
-            std::cout << "here-1" << std::endl;
             exit(EXIT_FAILURE);
         }
 
         int inst_pipe_fd = open(FIFO_INST, O_WRONLY);
         if (inst_pipe_fd == -1) {
             fprintf(stderr, "Open error on named pipe: %s\n", FIFO_INST);
-            std::cout << "here-2" << std::endl;
             exit(EXIT_FAILURE);
         }
         
-        std::cout << "here-3" << std::endl;
         while (tested_instance < TEST_INSTANCE_NUM) {
-            std::cout << "here-4" << std::endl;
 
             // prepare test input file and store its path in `buf` (to be sent to data pipe).
             char buf[PIPE_BUF_SIZE + 1];

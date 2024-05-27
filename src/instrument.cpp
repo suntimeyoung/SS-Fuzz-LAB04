@@ -10,9 +10,9 @@
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 
 #include "loop.hpp"
-
 
 using namespace llvm;
 
@@ -32,6 +32,11 @@ namespace {
 char InstrumentFunc::ID = 0;
 
 bool InstrumentFunc::runOnFunction(Function &F) {
+
+    if (F.getName() == "__cxx_global_var_init" || F.getName() == "_GLOBAL__sub_I_test.cpp") {
+        return true;
+    }
+
     Module *M = F.getParent();
     Module &ModuleRef = *M;
     LLVMContext &Context = M->getContext();
@@ -55,19 +60,15 @@ bool InstrumentFunc::runOnFunction(Function &F) {
             nullptr, GlobalVariable::GeneralDynamicTLSModel, 0, false);
     }
 
-    // instrument `Forkserver` in the entrypoint.
-    if (F.getName() == "main") {
-        IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
-        FunctionCallee forkServer = M->getOrInsertFunction("ForkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
-        forkBuilder.CreateCall(forkServer);
-    }
-      
     for (auto &B : F) {
+
         IRBuilder<> IRB(&(*(B.getFirstInsertionPt())));
 
         /* Generate the current location of the bb by random value */
         uint32_t cur_loc = dist(rng) % (1 << FSHM_MAX_ITEM_POW2);
         ConstantInt *CurLoc = ConstantInt::get(Int32Ty, cur_loc);
+
+        std::cout << F.getName().data() << ": " << cur_loc << std::endl;
 
         /* Load prev_loc */
         LoadInst *PrevLoc = IRB.CreateLoad(Int32Ty, AFLPrevLoc);
@@ -84,6 +85,13 @@ bool InstrumentFunc::runOnFunction(Function &F) {
 
         /* Set prev_loc to cur_loc >> 1 */
         IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
+    }
+
+    // instrument `Forkserver` in the entrypoint.
+    if (F.getName() == "main") {
+        IRBuilder<> forkBuilder(&(*(F.getEntryBlock().getFirstInsertionPt())));
+        FunctionCallee forkServer = M->getOrInsertFunction("ForkServer", Type::getVoidTy(Context), Type::getInt64Ty(Context));
+        forkBuilder.CreateCall(forkServer);
     }
 
     return true;

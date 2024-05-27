@@ -14,6 +14,7 @@ extern "C" {
 static __thread int prev_loc = 0;
 
 extern "C" void ForkServer() {
+    std::cout << "ForkServer Here" << std::endl;
     int times = 0;
     char buf[PIPE_BUF_SIZE + 1];
     char inst[PIPE_BUF_SIZE + 1];
