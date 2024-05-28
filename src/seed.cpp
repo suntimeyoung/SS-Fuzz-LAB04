@@ -1,54 +1,59 @@
-#include <random>
-
 #include "seed.hpp"
+#include "loop.hpp"
 
-/*The initialization of seedfiles, generated accroding to the data model*/
-vector<SeedFile> SeedManage::seed_init(int init_num) {
-    /*  
-        generates the inital seedfiles, stores them on disk, and returns the SeedFile of the files
-        not adding the files in to the priority queue 
-    */
-    return vector<SeedFile>();
+using namespace std;
+
+Seed::Seed(char *file_name) {
+    _file_name = file_name;
 }
 
-vector<SeedFile> SeedManage::seed_mutation_small() {
-    /*
-        takes the top of the priority queue and mutates it slightly, stores them on the disk, and returns the SeedFile of the filse
-        not adding the files in to the priority queue 
-    */
-    return vector<SeedFile>();
+void Seed::ComputeScore() {
+    _score = _info.coverage / (_info.size * _info.runtime);
 }
 
-vector<SeedFile> SeedManage::seed_mutation_large() {
-    /*
-        takes the top of the priority queue and mutates it largely, stores them on the disk, and returns the SeedFile of the filse
-        not adding the files in to the priority queue 
-    */
-    return vector<SeedFile>();
+void Seed::Mutation(uint32_t flag) {
+    switch (flag)
+    {
+    case BITFLIP:
+        /* code */
+        break;
+
+    case ARITHMETIC:
+        /* code */
+        break;
+
+    case INTEREST:
+        /* code */
+        break;
+
+    case DICTIONARY:
+        /* code */
+        break;
+
+    case HAVOC:
+        /* code */
+        break;
+
+    case SPLICE:
+        /* code */
+        break;
+    
+    default:
+        break;
+    }
 }
 
-/*The name of the seedfile will be modified automatically*/
-void SeedManage::push_into_queue(SeedFile sf) {
-    sf._filename = _gen_filename();
-    _seed_queue.push(sf);
+void SeedManage::Push(Seed s) {
+    _seed_queue.push_back(s);
+
+    std::sort(_seed_queue.begin(), _seed_queue.end(), [](Seed &__a, Seed &__b) {
+        return __a._score > __b._score;
+    });
 }
 
-SeedFile SeedManage::get_next_seedfile() {
-    SeedFile top_sf = _seed_queue.top();
-    _seed_queue.pop()
-    return top_sf;
-}
+Seed SeedManage::Pop() {
+    Seed first = *_seed_queue.begin();
+    _seed_queue.erase(_seed_queue.begin());
 
-string SeedManage::_gen_filename() {
-    std::mt19937_64 rng; // 随机数生成器
-    std::uniform_int_distribution<uint32_t> dist;
-    string filename = "seed-";
-    uint32_t random_value;
-    do {
-        random_value = dist(rng);
-    } while (_seed_hash.count(random_value));
-    return filename + to_string(random_value);
-}
-
-void SeedManage::test_queue() {
+    return first;
 }

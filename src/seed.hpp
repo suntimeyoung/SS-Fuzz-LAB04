@@ -1,51 +1,47 @@
-#include <iostream>
-#include <queue>
-#include <string>
-#include <set>
+#pragma once
+
+#include <bits/stdc++.h> 
 #include <vector>
 
-using namespace std;
 
-/*The class of seedfile, including the rules of priority queue*/
-class SeedFile{
-public:
-    string _filename;
-    uint64_t _coverage;
-    double _runtime;
-    uint64_t _size;
+#define MAX_QLEN 100;
 
-    SeedFile(string filename, uint64_t coverage, uint64_t size): 
-        _filename(filename), _coverage(coverage), _size(size) {}
-    
-    friend bool operator > (const SeedFile &a, const SeedFile &b) {
-        if (a._coverage != b._coverage) return a._coverage > b._coverage;
-        if (a._runtime != b._runtime) return a._runtime < b._runtime;
-        return a._size < b._size;
-    }
-    
-    
+/** Mutation Operation Flag */
+#define BITFLIP 0
+#define ARITHMETIC 1
+#define INTEREST 2
+#define DICTIONARY 3
+#define HAVOC 4
+#define SPLICE 5
+
+
+struct RunInfo {
+    double runtime;
+    uint64_t coverage;
+    uint64_t size;
 };
 
-/*The class of seedfile management, including the initialization, the seed derivation, the seed storage, and seed aquirement*/
-class SeedManage{
+class Seed {
 public:
-    string absolute_path;
-    int mutation_small_count;
-    int mutation_large_count;
-    
-    SeedManage(string _absolute_path, int _mutation_small_count, int _mutation_large_count):
-        absolute_path(_absolute_path), mutation_small_count(_mutation_small_count), mutation_large_count(_mutation_large_count) {}
-    SeedManage() {}
 
-    vector<SeedFile> seed_init(int init_num);
-    vector<SeedFile> seed_mutation_small();
-    vector<SeedFile> seed_mutation_large();
-    void push_into_queue(SeedFile sf);
-    SeedFile get_next_seedfile();
-    void test_queue();
-private:
-    set<uint32_t> _seed_hash; 
-    priority_queue<SeedFile> _seed_queue;
+    char *_file_name;
+    set<uint64_t> _hash;
+    double _score;
+    RunInfo _info;
 
-    string _gen_filename();
-}
+    Seed(char* file_name);
+    void ComputeScore();
+    void Mutation(uint32_t flag);
+
+};
+
+class SeedManage {
+public:
+
+    std::vector<Seed> _seed_queue;
+
+    // void 
+    void Push(Seed s);
+    Seed Pop();
+
+};
