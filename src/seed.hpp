@@ -7,7 +7,9 @@
 
 
 #define MAX_QLEN 100
-#define TEST_NAME_LEN 128
+#define TEST_NAME_LEN 512
+#define SCORE_THRESHOLD 0.3
+#define MUT_TIME_PER_SEED 3
 
 /** Mutation Operation Flag */
 enum MutOp {
@@ -39,8 +41,9 @@ class Seed {
 public:
 
     Seed(char *base_test, uint32_t seed_hash);
+    char *Testcase();
     void UpdateRunInfo(RunInfo rinfo);
-    void ComputeScore();
+    double Score();
     void Mutation(MutOp flag);
     friend bool operator>(const Seed &__a, const Seed &__b) {
         return __a._score > __b._score;
@@ -69,7 +72,7 @@ public:
     SeedPool();
     Seed NewSeed(char *base_test);
     Seed NewSeed(Seed base_seed);
-    void Empty();
+    void Clear();
 
 #ifndef SEED_TEST
 private:
@@ -91,7 +94,8 @@ public:
     Seed Pop();
     void Trim(size_t to_len=0);
     size_t Len();
-    void Empty();
+    void Clear();
+    bool Empty();
 
 #ifndef SEED_TEST
 private:

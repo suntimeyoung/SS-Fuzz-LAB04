@@ -1,11 +1,18 @@
 #define SEED_TEST
 #include "seed.hpp"
+#include "loop.hpp"
 
 int main () {
 
-    char file_1[10] = "hello1";
-    char file_2[10] = "hello2";
-    char file_3[10] = "hello3";
+    char file_1[TEST_NAME_LEN + 1], file_2[TEST_NAME_LEN + 1], file_3[TEST_NAME_LEN + 1];
+    snprintf(file_1, TEST_NAME_LEN, "%sfile_%d", TEST_DIR, 1);
+    snprintf(file_2, TEST_NAME_LEN, "%sfile_%d", TEST_DIR, 2);
+    snprintf(file_3, TEST_NAME_LEN, "%sfile_%d", TEST_DIR, 3);
+
+    if ( (access(file_1, F_OK) == -1) | (access(file_2, F_OK) == -1) | (access(file_3, F_OK) == -1) ) {
+        fprintf(stderr, "Please ensure the files below exist:\n%s\n%s\n%s\n", file_1, file_2, file_3);
+        exit(EXIT_FAILURE);
+    }
 
     SeedPool sp;
 
@@ -59,7 +66,7 @@ int main () {
     std::cout << "Length after trimming: " << sm.Len() << std::endl;
     std::cout << std::endl;
 
-    sm.Empty();
+    sm.Clear();
 
     s_1.Mutation(BITFLIP);
     s_2.Mutation(ARITHMETIC);

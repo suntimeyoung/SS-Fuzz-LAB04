@@ -1,4 +1,4 @@
-#include "loop.hpp"
+#include "../src/loop.hpp"
 #include <set>
 
 unsigned long long last_add = 0;
@@ -21,21 +21,19 @@ extern "C" void ForkServer() {
     char buf[PIPE_BUF_SIZE + 1];
     char inst_buf[PIPE_BUF_SIZE + 1];
 
-    int data_pipe_fd = open(FIFO_DATA, O_RDONLY);
-    if (data_pipe_fd == -1) {
-        fprintf(stderr, "Open error on named pipe: %s\n", FIFO_DATA);
-        exit(EXIT_FAILURE);
-    }
+    int data_pipe_fd = OpenNamedPipe(FIFO_DATA, O_RDONLY);
+    int inst_pipe_fd = OpenNamedPipe(FIFO_INST, O_RDONLY);
 
-    int inst_pipe_fd = open(FIFO_INST, O_RDONLY);
-    if (inst_pipe_fd == -1) {
-        fprintf(stderr, "Open error on named pipe: %s\n", FIFO_INST);
-        exit(EXIT_FAILURE);
-    }
-
-    /* Create a SHM with TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
+    /**  
+     * Create a SHM with
+     * TEST_INSTANCE_NUM rows * (1 << FSHM_MAX_ITEM_POW2) columns 
+     * of type FSHM_TYPE
+     **/
     int shmid;
-    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_INSTANCE_NUM, 0666|IPC_CREAT)) == -1) {
+    if ((shmid = shmget(
+            (key_t)FSHM_KEY, 
+            sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_NUM_PER_ROUND, 
+            0666|IPC_CREAT)) == -1) {
         fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
         exit(EXIT_FAILURE);
     }
@@ -45,21 +43,16 @@ extern "C" void ForkServer() {
     __afl_prev_loc = 0;
     
     while (true) {
+        // get some instructions to stop.
+        ReceiveInst(inst_pipe_fd);
+
         pid_t pid = fork();
 
         if (pid > 0) {
             // parent
 
-            // get some instructions to stop.
-            if (read(inst_pipe_fd, inst_buf, sizeof(int)) > 0) {
-                int inst = *((int *)inst_buf);
-                std::cout << "(times:"<< times << ") Parent (pid:" << getpid() << "): get instruction " 
-                    << ( inst == EXIT_INST ? "EXIT_INST" : "CONTINURE_INST" )
-                    << " from fuzzloop." << std::endl << std::endl;
-                if (inst == EXIT_INST) {
-                    exit(EXIT_SUCCESS);
-                }
-            }
+            /** send child pid to parent. */
+            /* some code. */
 
         } else {
             // child
@@ -68,7 +61,7 @@ extern "C" void ForkServer() {
             if (read(data_pipe_fd, buf, PIPE_BUF_SIZE) > 0) {
                 // pipe test input file to `stdin`.
                 freopen(buf, "r", stdin);
-                std::cout << "(times:"<< times << ") Child (pid:" << getpid() << "): pipe " << buf << " to the stdin of child." << std::endl << std::endl;
+                std::cout << "(pid:"<< getpid() << ") Child: pipe " << buf << " to the stdin of child." << std::endl;
             } else {
                 fprintf(stderr, "Read error on pipe %s\n", FIFO_DATA);
                 exit(EXIT_FAILURE);

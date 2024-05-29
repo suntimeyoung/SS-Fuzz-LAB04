@@ -12,7 +12,7 @@
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 
-#include "loop.hpp"
+#include "../src/loop.hpp"
 
 using namespace llvm;
 
