@@ -14,7 +14,7 @@
 #define TEST_DIR "/tmp/.fuzzlab/testcases/"
 #define FIFO_DATA "/tmp/.fuzzlab/fuzz_fifo_data"
 #define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
-#define PIPE_BUF_SIZE 1024
+#define PIPE_BUF_SIZE 128
 #define TEST_INSTANCE_NUM 10
 #define CONTINUE_INST 0
 #define EXIT_INST 1
