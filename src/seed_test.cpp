@@ -87,7 +87,8 @@ int main () {
     for (auto elem: sm._seed_queue) {
         std::cout << "(score=" << elem._score << 
                      ", hash=" << elem._seed_hash << 
-                     ", cur_test=" << elem._cur_test << ")" << 
+                     ", base_test=" << elem._base_test << 
+                     ", mut_test=" << elem._mut_test << ")" << 
         std::endl;
     }
     std::cout << std::endl;

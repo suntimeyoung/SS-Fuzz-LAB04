@@ -12,7 +12,7 @@ using namespace std;
 Seed::Seed(char *base_test, uint32_t seed_hash) {
     _seed_hash = seed_hash;
     snprintf(_base_test, TEST_NAME_LEN, "%s", base_test);
-    snprintf(_cur_test, TEST_NAME_LEN, "");
+    snprintf(_mut_test, TEST_NAME_LEN, "");
     _score = 0.0;
     _minfo = MutInfo{0, 0, 0, 0, 0, 0};
 }
@@ -26,10 +26,10 @@ void Seed::ComputeScore() {
     _score = 1.0 * _rinfo.coverage / (_rinfo.size * _rinfo.runtime);
 }
 
-// Perform mutation on the `_base_test` according to `minfo`, and saved to `_cur_test`.
+// Perform mutation on the `_base_test` according to `minfo`, and saved to `_mut_test`.
 void Seed::Mutation(MutOp flag) {
 
-    if (strcmp(_cur_test, "")) {
+    if (strcmp(_mut_test, "")) {
         fprintf(stderr, "Seed %d already mutated.\n", _seed_hash);
         exit(EXIT_FAILURE);
     }
@@ -64,7 +64,7 @@ void Seed::Mutation(MutOp flag) {
         break;
     }
 
-    snprintf(_cur_test, TEST_NAME_LEN, "%sfile_%04x", TEST_DIR, _seed_hash);
+    snprintf(_mut_test, TEST_NAME_LEN, "%sfile_%04x", TEST_DIR, _seed_hash);
 
 }
 
@@ -100,7 +100,7 @@ Seed SeedPool::NewSeed(Seed base_seed) {
     }
     _pool.insert(hash);
 
-    Seed new_seed(base_seed._cur_test, hash);
+    Seed new_seed(base_seed._mut_test, hash);
     new_seed._minfo = base_seed._minfo;
 
     return new_seed;

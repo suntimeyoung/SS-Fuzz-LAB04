@@ -55,7 +55,7 @@ private:
 
     uint32_t _seed_hash;
     char _base_test[TEST_NAME_LEN];
-    char _cur_test[TEST_NAME_LEN];
+    char _mut_test[TEST_NAME_LEN];
     double _score;
     RunInfo _rinfo;
     MutInfo _minfo;
