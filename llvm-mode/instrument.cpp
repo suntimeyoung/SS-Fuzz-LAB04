@@ -44,19 +44,20 @@ bool InstrumentFunc::runOnFunction(Function &F) {
     IntegerType *Int32Ty = IntegerType::getInt32Ty(Context);
 
     /* Get globals for the SHM region and the previous location. Note that
-     __afl_prev_loc is thread-local. */
+     __cfl_prev_loc is thread-local. */
 
-    GlobalVariable *AFLMapPtr = M->getGlobalVariable("__afl_area_ptr");
+    GlobalVariable *AFLMapPtr = M->getGlobalVariable("__cfl_area_ptr");
     if (!AFLMapPtr) {
         AFLMapPtr = new GlobalVariable(
             ModuleRef, PointerType::getUnqual(Int32Ty), false,
-            GlobalValue::ExternalLinkage, nullptr, "__afl_area_ptr");
+            GlobalValue::ExternalLinkage, nullptr, "__cfl_area_ptr",
+            nullptr, GlobalVariable::GeneralDynamicTLSModel, 0, false);
     }
 
-    GlobalVariable *AFLPrevLoc = M->getGlobalVariable("__afl_prev_loc");
+    GlobalVariable *AFLPrevLoc = M->getGlobalVariable("__cfl_prev_loc");
     if (!AFLPrevLoc) {
         AFLPrevLoc = new GlobalVariable(
-            ModuleRef, Int32Ty, false, GlobalValue::ExternalLinkage, nullptr, "__afl_prev_loc",
+            ModuleRef, Int32Ty, false, GlobalValue::ExternalLinkage, nullptr, "__cfl_prev_loc",
             nullptr, GlobalVariable::GeneralDynamicTLSModel, 0, false);
     }
 

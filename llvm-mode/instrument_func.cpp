@@ -5,8 +5,8 @@ unsigned long long last_add = 0;
 std::set<unsigned long long> branches;
 
 extern "C" {
-    FSHM_TYPE *__afl_area_ptr;
-    __thread int __afl_prev_loc;
+    __thread FSHM_TYPE *__cfl_area_ptr;
+    __thread int __cfl_prev_loc;
     // void ForkServer();
 }
 
@@ -39,8 +39,8 @@ extern "C" void ForkServer() {
     }
 
     /* Attach the SHM to its own memory */
-    __afl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
-    __afl_prev_loc = 0;
+    __cfl_area_ptr = (FSHM_TYPE *) shmat(shmid, NULL, 0);
+    __cfl_prev_loc = 0;
     
     while (true) {
         // get some instructions to stop.
@@ -56,7 +56,8 @@ extern "C" void ForkServer() {
 
         } else {
             // child
-
+            __cfl_area_ptr += (times % TEST_NUM_PER_ROUND) * (1 << FSHM_MAX_ITEM_POW2);
+            // std::cout << "__cfl_area_ptr: " << __cfl_area_ptr << std::endl;
             // get test input file path (stored in `buf`) from data pipe.
             if (read(data_pipe_fd, buf, PIPE_BUF_SIZE) > 0) {
                 // pipe test input file to `stdin`.

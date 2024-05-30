@@ -1,5 +1,5 @@
 #define DEMO
-#define VERBOSE
+// #define VERBOSE
 
 #include <chrono>
 
