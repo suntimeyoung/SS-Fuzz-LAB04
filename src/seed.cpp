@@ -13,7 +13,7 @@ Seed::Seed(char *base_test, uint32_t seed_hash) {
     snprintf(_base_test, TEST_NAME_LEN, "%s", base_test);
     _score = -1.0;
     _rank = -1.0;
-    _rinfo = RunInfo{0.0, 0, 0};
+    _rinfo = RunInfo{-1.0, 0.0, 0};
     _minfo = MutInfo{0, 0, 0, 0, 0, 0};
 }
 
@@ -23,19 +23,32 @@ char *Seed::Testcase() {
 
 void Seed::UpdateRunInfo(RunInfo rinfo) {
     _rinfo = rinfo;
-    // _score = 1.0 * _rinfo.coverage / (_rinfo.size * _rinfo.runtime);
-    _score = 1.0 * _rinfo.coverage / _rinfo.size;
 }
 
-double Seed::Score() {
+void Seed::UpdateRunInfo(double runtime, double coverage) {
+    _rinfo.runtime = runtime;
+    _rinfo.coverage = coverage;
+}
+
+double Seed::Score() {    
 
     if (_score < 0) {
-        if (_rinfo.runtime == 0) {
+        if (_rinfo.runtime < 0) {
             fprintf(stderr, "Seed %d has no runtime info yet.", _seed_hash);
             exit(EXIT_FAILURE);
         }
-        // _score = 1.0 * _rinfo.coverage / (_rinfo.size * _rinfo.runtime);
-        _score = 1.0 * _rinfo.coverage / _rinfo.size;
+
+        if (_rinfo.size == 0) {
+            struct stat stat_buf;
+            int rc;
+            if ( (rc = stat(_base_test, &stat_buf)) != 0 ) {
+                fprintf(stderr, "Bad file %s with bad size.", _base_test);
+                exit(EXIT_FAILURE);
+            }
+            _rinfo.size = stat_buf.st_size;
+        }
+
+        _score = _rinfo.coverage / (_rinfo.size * _rinfo.runtime);
     }
 
     return _score;
