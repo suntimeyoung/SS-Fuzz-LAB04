@@ -44,9 +44,8 @@ public:
     char *Testcase();
     void UpdateRunInfo(RunInfo rinfo);
     double Score();
-    void Mutation(MutOp flag);
     friend bool operator>(const Seed &__a, const Seed &__b) {
-        return __a._score > __b._score;
+        return __a._rank > __b._rank;
     }
 
     friend class SeedPool;
@@ -57,9 +56,9 @@ private:
 #endif
 
     uint32_t _seed_hash;
-    char _base_test[TEST_NAME_LEN];
-    char _mut_test[TEST_NAME_LEN];
+    char _base_test[TEST_NAME_LEN + 1];
     double _score;
+    double _rank;
     RunInfo _rinfo;
     MutInfo _minfo;
 
@@ -71,7 +70,7 @@ public:
 
     SeedPool();
     Seed NewSeed(char *base_test);
-    Seed NewSeed(Seed base_seed);
+    Seed Mutate(Seed base_seed, MutOp flag);
     void Clear();
 
 #ifndef SEED_TEST

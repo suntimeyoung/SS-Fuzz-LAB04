@@ -63,10 +63,8 @@ int main() {
                     if (round_seed.Score() > SCORE_THRESHOLD) {
                         for (int i = 0; i < MUT_TIME_PER_SEED; i ++) {
 
-                            // deep copy.
-                            Seed *copy = new Seed(round_seed);
-                            copy->Mutation(RandomMutOp());
-                            sm.Push(sp.NewSeed(*copy));
+                            Seed mut_seed = sp.Mutate(round_seed, RandomMutOp());
+                            sm.Push(mut_seed);
 
                         }
                     }

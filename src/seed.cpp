@@ -12,8 +12,8 @@ using namespace std;
 Seed::Seed(char *base_test, uint32_t seed_hash) {
     _seed_hash = seed_hash;
     snprintf(_base_test, TEST_NAME_LEN, "%s", base_test);
-    _mut_test[0] = '\0';
     _score = -1.0;
+    _rank = -1.0;
     _rinfo = RunInfo{0.0, 0, 0};
     _minfo = MutInfo{0, 0, 0, 0, 0, 0};
 }
@@ -40,59 +40,6 @@ double Seed::Score() {
     return _score;
 }
 
-// Perform mutation on the `_base_test` according to `minfo`, and saved to `_mut_test`.
-void Seed::Mutation(MutOp flag) {
-
-    if (_mut_test[0] != '\0') {
-        fprintf(stderr, "Seed %d already mutated.\n", _seed_hash);
-        exit(EXIT_FAILURE);
-    }
-
-    switch (flag)
-    {
-    case BITFLIP:
-        _minfo.bitflip_times ++;
-        /* code */
-        break;
-
-    case ARITHMETIC:
-        _minfo.arithmetic_times ++;
-        /* code */
-        break;
-
-    case INTEREST:
-        _minfo.interest_times ++;
-        /* code */
-        break;
-
-    case DICTIONARY:
-        _minfo.dictionary_times ++;
-        /* code */
-        break;
-
-    case HAVOC:
-        _minfo.havoc_times ++;
-        /* code */
-        break;
-
-    case SPLICE:
-        _minfo.splice_times ++;
-        /* code */
-        break;
-    
-    default:
-        fprintf(stderr, "Bad Mutation Flag.");
-        exit(EXIT_FAILURE);
-    }
-
-    snprintf(_mut_test, TEST_NAME_LEN, "%sfile_%08x", TEST_DIR, _seed_hash);
-
-    std::ifstream base(_base_test);
-    std::ofstream mut(_mut_test);
-    mut << base.rdbuf();
-
-}
-
 /** 
  * 
  * class `SeedPool`: to backup the hash of all created `Seed` and arrange new `Seed`.
@@ -108,6 +55,7 @@ SeedPool::SeedPool() {
     _pool = pool;
 }
 
+// create a new seed directly from init testcase(with no `_score` and infinite `_rank`).
 Seed SeedPool::NewSeed(char *base_test) {
     uint32_t hash = _dist(_rng);
     while (_pool.count(hash)) {
@@ -118,17 +66,65 @@ Seed SeedPool::NewSeed(char *base_test) {
     return Seed(base_test, hash);
 }
 
-Seed SeedPool::NewSeed(Seed base_seed) {
+// perform mutation on the `base_seed` according to `flag`, and return mutated seed.
+Seed SeedPool::Mutate(Seed base_seed, MutOp flag) {
+
     uint32_t hash = _dist(_rng);
     while (_pool.count(hash)) {
         hash = _dist(_rng);
     }
     _pool.insert(hash);
 
-    Seed new_seed(base_seed._mut_test, hash);
-    new_seed._minfo = base_seed._minfo;
+    char base_test[TEST_NAME_LEN + 1];
+    snprintf(base_test, TEST_NAME_LEN, "%sfile_%08x", TEST_DIR, hash);
 
-    return new_seed;
+    Seed mut_seed(base_test, hash);
+    mut_seed._minfo = base_seed._minfo;
+    mut_seed._rank = base_seed._score;
+
+    switch (flag)
+    {
+    case BITFLIP:
+        mut_seed._minfo.bitflip_times ++;
+        /* code */
+        break;
+
+    case ARITHMETIC:
+        mut_seed._minfo.arithmetic_times ++;
+        /* code */
+        break;
+
+    case INTEREST:
+        mut_seed._minfo.interest_times ++;
+        /* code */
+        break;
+
+    case DICTIONARY:
+        mut_seed._minfo.dictionary_times ++;
+        /* code */
+        break;
+
+    case HAVOC:
+        mut_seed._minfo.havoc_times ++;
+        /* code */
+        break;
+
+    case SPLICE:
+        mut_seed._minfo.splice_times ++;
+        /* code */
+        break;
+    
+    default:
+        fprintf(stderr, "Bad Mutation Flag.");
+        exit(EXIT_FAILURE);
+    }
+
+    // temporarily copy the old testcase to the new one.
+    std::ifstream base(base_seed._base_test);
+    std::ofstream mut(mut_seed._base_test);
+    mut << base.rdbuf();
+
+    return mut_seed;
 }
 
 void SeedPool::Clear() {
@@ -142,7 +138,7 @@ void SeedPool::Clear() {
  **/
 
 SeedManage::SeedManage(Seed init_s) {
-    init_s._score = DBL_MAX;
+    init_s._rank = DBL_MAX;
     _seed_queue = vector<Seed>({init_s});
     _qlen = 1;
 }
@@ -152,7 +148,7 @@ SeedManage::SeedManage(vector<Seed> init_s_vec) {
     _qlen = 0;
 
     for (Seed s: _seed_queue) {
-        s._score = DBL_MAX;
+        s._rank = DBL_MAX;
         _qlen ++;
     }
 }

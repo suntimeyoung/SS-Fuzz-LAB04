@@ -36,7 +36,9 @@ if [ ! -d build/ ]; then
     mkdir build/
 fi
 
-rm /tmp/.fuzzlab/testcases/*
+if [ ! -z "$(ls -A /tmp/.fuzzlab/testcases)" ]; then
+    rm /tmp/.fuzzlab/testcases/*
+fi
 
 # 编译 instrument.cpp 生成共享库 instrument.so
 $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o instrument.so $LDFLAGS
