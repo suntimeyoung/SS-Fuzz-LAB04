@@ -21,12 +21,20 @@ int FuncC(int a, int b) {
 
 int main () {
     int a, b;
+    char _a, _b;
     int cnt = 2;
+
     do {
-        cin >> a >> b;
+
+        cin >> _a >> _b;
+        a = (int)_a;
+        b = (int)_b;
+
         if (a > b)
             cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
+
         cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
+
     } while (--cnt > 0);
 
     return 0;

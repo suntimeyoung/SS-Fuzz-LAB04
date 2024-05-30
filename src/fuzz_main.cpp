@@ -7,7 +7,6 @@
 #include "seed.hpp"
 
 RunInfo RandomRunInfo();
-MutOp RandomMutOp();
 void MakeExampleInitTestcase(int);
 
 int main() {
@@ -22,6 +21,8 @@ int main() {
     std::cout << "Finished." << std::endl << std::endl;
 #endif
 
+    std::uniform_int_distribution<uint8_t> dist(0, UINT8_MAX);
+    std::mt19937_64 rng;
     int tested_instance = 0;
 
     int pid = fork();
@@ -63,8 +64,13 @@ int main() {
                     if (round_seed.Score() > SCORE_THRESHOLD) {
                         for (int i = 0; i < MUT_TIME_PER_SEED; i ++) {
 
-                            Seed mut_seed = sp.Mutate(round_seed, RandomMutOp());
-                            sm.Push(mut_seed);
+                            if (round_seed.AllowMassive()) {
+                                Seed mut_seed = sp.Mutate(round_seed, MutOp(dist(rng) % SPLICE));
+                                sm.Push(mut_seed);
+                            } else {
+                                Seed mut_seed = sp.Mutate(round_seed, MutOp(dist(rng) % DICTIONARY));
+                                sm.Push(mut_seed);
+                            }
 
                         }
                     }
@@ -132,21 +138,12 @@ RunInfo RandomRunInfo() {
     std::uniform_int_distribution<uint32_t> dist;
     std::mt19937_64 rng(now);
 
-    /** score in [0.25, 2]. */
     return RunInfo{
         (dist(rng) % 800 + 400) * 1.0 / 100,
         dist(rng) % 350 + 50,
         dist(rng) % 20 + 5
     };
 
-}
-
-MutOp RandomMutOp() {
-    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::uniform_int_distribution<uint32_t> dist;
-    std::mt19937_64 rng(now);
-
-    return MutOp(dist(rng) % 6);
 }
 
 void MakeExampleInitTestcase(int file_no) {
