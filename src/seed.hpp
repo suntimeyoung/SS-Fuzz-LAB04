@@ -1,6 +1,7 @@
 #pragma once
 
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+#include <sys/stat.h>
 #include <vector>
 #include <random>
 #include <set>
@@ -23,8 +24,9 @@ enum MutOp {
 
 struct RunInfo {
     double runtime;
-    uint32_t coverage;
-    uint32_t size;
+    double coverage;
+    off_t size;
+    // RunInfo(double runtime, double coverage, uint32_t size): runtime(runtime), coverage(coverage), size(size) {}
 };
 
 struct MutInfo {
@@ -43,6 +45,7 @@ public:
     Seed(char *base_test, uint32_t seed_hash);
     char *Testcase();
     void UpdateRunInfo(RunInfo rinfo);
+    void UpdateRunInfo(double runtime, double coverage);
     double Score();
     friend bool operator>(const Seed &__a, const Seed &__b) {
         return __a._rank > __b._rank;

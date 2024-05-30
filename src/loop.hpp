@@ -3,11 +3,13 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <ctime>
 
 #include <iostream>
 #include <fstream>
@@ -27,16 +29,24 @@
 #define EXIT_INST 2
 
 #define FSHM_KEY 0x7777
+#define FSHM_TIME_KEY 0x8888
 #define SHM_COUNTER_TYPE Int32Ty
 #define FSHM_TYPE unsigned int
 #define FSHM_MAX_ITEM_POW2 16
 
+struct PidTime {
+    clock_t start_time;
+    clock_t duration_time;
+    pid_t pid;
+};
+
 
 std::vector<char *> GetInitTestList();
 int OpenNamedPipe(const char *fifo_path, int flag);
-int GetOrCreateSharedMem();
+int GetOrCreateSharedMem(key_t key, size_t size);
 void ReadSharedMem(char *buf, int buf_size);
 void WriteSharedMem(const char *buf, int pos, int offset);
 void DeleteSharedMem(int shmid);
 void SendInst(const int inst_pipe_fd, int continue_or_wait);
 void ReceiveInst(const int inst_pipe_fd);
+bool ProgFinish(PidTime* pid_time_ptr);

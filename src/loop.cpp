@@ -44,11 +44,11 @@ int OpenNamedPipe(const char *fifo_path, int flag) {
     return pipe_fd;
 }
 
-int GetOrCreateSharedMem() {
+int GetOrCreateSharedMem(key_t key, size_t size) {
     int shmid;
     
     /* Create a SHM with TEST_INSTANCE_NUM rows and (1 << FSHM_MAX_ITEM_POW2) columns of type FSHM_TYPE */
-    if ((shmid = shmget((key_t)FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_NUM_PER_ROUND, 0640|IPC_CREAT)) == -1) {
+    if ((shmid = shmget((key_t)key, size, 0666|IPC_CREAT)) == -1) {
         fprintf(stderr, "Could not create shared memory with key %x\n", FSHM_KEY);
         exit(EXIT_FAILURE);
     } else {
@@ -128,3 +128,28 @@ void ReceiveInst(const int inst_pipe_fd) {
     }
 }
 
+bool ProgFinish(PidTime* pid_time_ptr) {
+    bool check = true;
+    for (int i=0; i<TEST_NUM_PER_ROUND; i++) {
+
+        if (pid_time_ptr[i].duration_time != 0) continue; // pid recorded
+
+        int status;
+        pid_t result = waitpid(pid_time_ptr[i].pid, &status, WNOHANG);
+
+        if (result == 0) {
+            // pid running
+            check = false;
+
+        } else if (result == -1) {
+            pid_time_ptr[i].duration_time = clock() - pid_time_ptr[i].start_time; 
+            // fprintf(stderr, "Bad child process %d.\n", pid_time_ptr[i].pid);
+            // exit(EXIT_FAILURE);
+        }
+        //  else {
+        //     // pid finished
+        //     pid_time_ptr[i].duration_time = clock() - pid_time_ptr[i].start_time; 
+        // }
+    }
+    return check;
+}

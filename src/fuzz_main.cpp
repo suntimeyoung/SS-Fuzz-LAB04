@@ -1,10 +1,12 @@
 #define DEMO
-// #define VERBOSE
+#define VERBOSE
 
 #include <chrono>
 
 #include "loop.hpp"
 #include "seed.hpp"
+#include "bitmap.hpp"
+
 
 RunInfo RandomRunInfo();
 MutOp RandomMutOp();
@@ -31,6 +33,12 @@ int main() {
 
         int data_pipe_fd = OpenNamedPipe(FIFO_DATA, O_WRONLY);
         int inst_pipe_fd = OpenNamedPipe(FIFO_INST, O_WRONLY);
+        int shmid_bitmap = GetOrCreateSharedMem(FSHM_KEY, sizeof(FSHM_TYPE)*(1 << FSHM_MAX_ITEM_POW2) * TEST_NUM_PER_ROUND);
+        int shmid_time = GetOrCreateSharedMem(FSHM_TIME_KEY, sizeof(PidTime) * TEST_NUM_PER_ROUND);
+
+        FSHM_TYPE *__cfl_area_ptr = (FSHM_TYPE *) shmat(shmid_bitmap, NULL, 0);
+        PidTime *__cfl_time_ptr = (PidTime *) shmat(shmid_time, NULL, 0);
+        memset(__cfl_time_ptr, 0, sizeof(PidTime) * TEST_NUM_PER_ROUND);
 
         std::vector<char *> init_files = GetInitTestList();
         std::vector<Seed> init_seeds;
@@ -42,6 +50,7 @@ int main() {
 
         SeedManage sm(init_seeds);
         std::vector<Seed> round_seeds;
+        BitMap bitmap;
         
         while (!sm.Empty()) {
 
@@ -49,21 +58,27 @@ int main() {
             
             if (tested_instance > 0 && !(tested_instance % TEST_NUM_PER_ROUND) ) {
                 SendInst(inst_pipe_fd, WAIT_INST);
+                while (!ProgFinish(__cfl_time_ptr));
+
 #ifdef VERBOSE
                 std::cout << "(pid:" << getpid() << ") Fuzz_main: sended WAIT_INST." << std::endl;
 #endif
                 /** handle runtime information, compute score and push mutated seeds into queue. */
 
-                for (Seed round_seed: round_seeds) {
-                    round_seed.UpdateRunInfo(RandomRunInfo());
+                for (int i=0; i<TEST_NUM_PER_ROUND; i++) {
+                    round_seeds[i].UpdateRunInfo(
+                        1.0 * __cfl_time_ptr[i].duration_time / CLOCKS_PER_SEC,
+                        bitmap.compute_score(__cfl_area_ptr + i * (1 << FSHM_MAX_ITEM_POW2))
+                    );
+                    
 #ifdef VERBOSE
-                    std::cout << "(pid:" << getpid() << ") Fuzz_main: round seed score is " << round_seed.Score() << std::endl;
+                    std::cout << "(pid:" << getpid() << ") Fuzz_main: round seed score is " << round_seeds[i].Score() << std::endl;
 #endif
 
-                    if (round_seed.Score() > SCORE_THRESHOLD) {
+                    if (round_seeds[i].Score() > SCORE_THRESHOLD) {
                         for (int i = 0; i < MUT_TIME_PER_SEED; i ++) {
 
-                            Seed mut_seed = sp.Mutate(round_seed, RandomMutOp());
+                            Seed mut_seed = sp.Mutate(round_seeds[i], RandomMutOp());
                             sm.Push(mut_seed);
 
                         }
@@ -73,7 +88,8 @@ int main() {
 
                 sm.Trim();
                 round_seeds.clear();
-
+                bitmap.bitmap_update();
+                memset(__cfl_time_ptr, 0, sizeof(PidTime) * TEST_NUM_PER_ROUND);
 #ifdef VERBOSE
                 std::cout << "(pid:" << getpid() << ") Fuzz_main: finished round handling, " << tested_instance << " testcases tested." << std::endl;
 #endif
@@ -89,7 +105,11 @@ int main() {
             std::cout << "(pid:" << getpid() << ") Fuzz_main: testing <" << round_seeds.back().Testcase() << ">..." << std::endl;
 
             // send the test input file to data pipe.
-            if (write(data_pipe_fd, round_seeds.back().Testcase(), PIPE_BUF_SIZE) == -1) {
+            char buf[2*PIPE_BUF_SIZE];
+            memcpy(buf, round_seeds.back().Testcase(), PIPE_BUF_SIZE);
+            snprintf(buf+PIPE_BUF_SIZE, PIPE_BUF_SIZE, "%d", tested_instance % TEST_NUM_PER_ROUND);
+            // std::cout << buf << std::endl;
+            if (write(data_pipe_fd, buf, 2*PIPE_BUF_SIZE) == -1) {
                 fprintf(stderr, "Write error on pipe %s\n", FIFO_DATA);
                 exit(EXIT_FAILURE);
             }
@@ -135,7 +155,7 @@ RunInfo RandomRunInfo() {
     /** score in [0.25, 2]. */
     return RunInfo{
         (dist(rng) % 800 + 400) * 1.0 / 100,
-        dist(rng) % 350 + 50,
+        (dist(rng) % 35000 + 5000) * 1.0 / 100,
         dist(rng) % 20 + 5
     };
 
