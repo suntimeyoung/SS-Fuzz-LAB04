@@ -12,7 +12,18 @@ RunInfo RandomRunInfo();
 void MakeNormalInitTestcase(int);
 void MakeAbnormalInitTestcase(int);
 
-int main() {
+int main(int argc, char **argv) {
+
+    char test_prog[PIPE_BUF_SIZE + 1];
+
+    if (argc > 2) {
+        fprintf(stderr, "Bad arguments, using format: bin/fuzz_main [test_prog_name].");
+        exit(EXIT_FAILURE);
+    } else if (argc == 1) {
+        snprintf(test_prog, PIPE_BUF_SIZE, "%s%s", TEST_PROG_DIR, DEFAULT_TEST_PROG);
+    } else {
+        snprintf(test_prog, PIPE_BUF_SIZE, "%s%s", TEST_PROG_DIR, argv[1]);
+    }
 
 #ifdef DEMO
     std::cout << "Preparing 20 init testcases for example program..." << std::endl;
@@ -152,9 +163,9 @@ int main() {
         // child
 
         // execute tested program.
-        execl(TEST_PATH, TEST_PATH, NULL);
+        execl(test_prog, test_prog, NULL);
 
-        fprintf(stderr, "Could not execl program %s\n", TEST_PATH);
+        fprintf(stderr, "Could not execl program %s\n", test_prog);
         exit(EXIT_FAILURE);
     }
 

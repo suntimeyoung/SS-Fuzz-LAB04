@@ -3,8 +3,17 @@
 # 确定 LLVM 的版本和工具的位置
 LLVM_CONFIG="llvm-config-12"
 CLANG_COMPILER="clang++-12"
-# LLVM_CONFIG="llvm-config-14"
-# CLANG_COMPILER="clang++-14"
+TEST_PROG=$1
+
+if [ "$TEST_PROG" = "" ]; then
+    TEST_PROG="test.cpp"
+fi
+
+if  [ ! -f examples/$TEST_PROG ]; then
+    echo "Please ensure the test program path is right."
+    exit
+fi
+
 
 # 检查 llvm-config 工具是否可用
 if ! [ -x "$(command -v $LLVM_CONFIG)" ]; then
@@ -34,30 +43,25 @@ fi
 
 if [ ! -d build/ ]; then
     mkdir build/
+    mkdir build/instrument_so/
+    $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o build/instrument_so/instrument.so $LDFLAGS
+    $CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o build/instrument_so/instrument_func.o
+    $CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o build/instrument_so/loop.o
 else
-    rm -rf build/
-    mkdir build/
+    if [ ! -d build/instrument_so/ ] || [ -z "$(ls -A build/instrument_so/)" ]; then
+        mkdir build/instrument_so/
+        $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o build/instrument_so/instrument.so $LDFLAGS
+        $CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o build/instrument_so/instrument_func.o
+        $CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o build/instrument_so/loop.o
+    fi
 fi
 
-if [ ! -z "$(ls -A /tmp/.fuzzlab/testcases)" ]; then
+if [ ! -z "$(ls -A /tmp/.fuzzlab/testcases/)" ]; then
     rm /tmp/.fuzzlab/testcases/*
 fi
 
-# 编译 instrument.cpp 生成共享库 instrument.so
-$CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o instrument.so $LDFLAGS
-# $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared src/hello.cpp -o hello.so $LDFLAGS
-
-# 使用 instrument.so 处理 test.cpp
-$CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c examples/test.cpp -o test.o
-# $CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -S -emit-llvm examples/test.cpp -o test.ll
-# $CLANG_COMPILER -Xclang -load -Xclang ./hello.so -c examples/test.cpp -o test_hello.o
-
-# 编译 instrument_func.cpp 生成链接文件 instrument_func.o
-$CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o instrument_func.o
-$CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o loop.o
-# $CLANG_COMPILER -S -emit-llvm llvm-mode/instrument_func.cpp -o instrument_func.ll
-
-$CLANG_COMPILER -g loop.o instrument_func.o test.o -o bin/test
+$CLANG_COMPILER -Xclang -load -Xclang build/instrument_so/instrument.so -c examples/$TEST_PROG -o $TEST_PROG.o
+$CLANG_COMPILER -g build/instrument_so/loop.o build/instrument_so/instrument_func.o $TEST_PROG.o -o bin/$TEST_PROG.elf
 
 rm -rf *.o *.so
 

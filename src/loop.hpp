@@ -15,8 +15,8 @@
 #include <fstream>
 #include <vector>
 
-#define LOG_FILE "/tmp/.fuzzlab/fuzz_log.txt"
-#define TEST_PATH "/tmp/.fuzzlab/bin/test"
+#define DEFAULT_TEST_PROG "test.cpp.elf"
+#define TEST_PROG_DIR "/tmp/.fuzzlab/bin/"
 #define TEST_DIR "/tmp/.fuzzlab/testcases/"
 #define FIFO_DATA "/tmp/.fuzzlab/fuzz_fifo_data"
 #define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
