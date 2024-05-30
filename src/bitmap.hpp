@@ -9,8 +9,8 @@
 class BitMap {
 public:
     BitMap();
-    double compute_score(FSHM_TYPE *new_bitmap);
-    void bitmap_update();
+    double ComputeScore(FSHM_TYPE *new_bitmap);
+    void Update();
 
 private:
     uint32_t _length;

@@ -9,16 +9,21 @@
 
 
 RunInfo RandomRunInfo();
-void MakeExampleInitTestcase(int);
+void MakeNormalInitTestcase(int);
+void MakeAbnormalInitTestcase(int);
 
 int main() {
 
 #ifdef DEMO
     std::cout << "Preparing 20 init testcases for example program..." << std::endl;
     int num = 20;
+    while (num-- > 10) {
+        usleep(5000);
+        MakeNormalInitTestcase(num);
+    }
     while (num--) {
         usleep(5000);
-        MakeExampleInitTestcase(num);
+        MakeAbnormalInitTestcase(num);
     }
     std::cout << "Finished." << std::endl << std::endl;
 #endif
@@ -54,8 +59,6 @@ int main() {
         BitMap bitmap;
         
         while (!sm.Empty()) {
-
-            if (tested_instance == TEST_NUM_MAX) break;
             
             if (tested_instance > 0 && !(tested_instance % TEST_NUM_PER_ROUND) ) {
                 SendInst(inst_pipe_fd, WAIT_INST);
@@ -64,12 +67,13 @@ int main() {
 #ifdef VERBOSE
                 std::cout << "(pid:" << getpid() << ") Fuzz_main: sended WAIT_INST." << std::endl;
 #endif
+
                 /** handle runtime information, compute score and push mutated seeds into queue. */
 
-                for (int i=0; i<TEST_NUM_PER_ROUND; i++) {
+                for (int i = 0; i < TEST_NUM_PER_ROUND; i ++) {
                     round_seeds[i].UpdateRunInfo(
                         1.0 * __cfl_time_ptr[i].duration_time / CLOCKS_PER_SEC,
-                        bitmap.compute_score(__cfl_area_ptr + i * (1 << FSHM_MAX_ITEM_POW2))
+                        bitmap.ComputeScore(__cfl_area_ptr + i * (1 << FSHM_MAX_ITEM_POW2))
                     );
                     
 #ifdef VERBOSE
@@ -94,11 +98,15 @@ int main() {
 
                 sm.Trim();
                 round_seeds.clear();
-                bitmap.bitmap_update();
+                bitmap.Update();
                 memset(__cfl_time_ptr, 0, sizeof(PidTime) * TEST_NUM_PER_ROUND);
+
 #ifdef VERBOSE
                 std::cout << "(pid:" << getpid() << ") Fuzz_main: finished round handling, " << tested_instance << " testcases tested." << std::endl;
 #endif
+
+            if (tested_instance == TEST_NUM_MAX) break;
+
             }
 
             SendInst(inst_pipe_fd, CONTINUE_INST);
@@ -127,6 +135,7 @@ int main() {
         SendInst(inst_pipe_fd, EXIT_INST);
 
 #ifdef VERBOSE
+            std::cout << "(pid:" << getpid() << ") Fuzz_main: finished all rounds, " << tested_instance << " testcases tested." << std::endl;
             std::cout << "(pid:" << getpid() << ") Fuzz_main: sended EXIT_INST." << std::endl;
 #endif
 
@@ -166,7 +175,7 @@ RunInfo RandomRunInfo() {
 
 }
 
-void MakeExampleInitTestcase(int file_no) {
+void MakeNormalInitTestcase(int file_no) {
     char file_path[PIPE_BUF_SIZE + 1];
     snprintf(file_path, PIPE_BUF_SIZE, "%sfile_%08x", TEST_DIR, file_no);
 
@@ -177,6 +186,42 @@ void MakeExampleInitTestcase(int file_no) {
     std::ofstream example(file_path);
     example << dist(rng) % 150 + 53  << " " << dist(rng) % 150 + 54 << "\n";
     example << dist(rng) % 150 + 52  << " " << dist(rng) % 150 + 51 << "\n";
+
+    example.close();
+
+}
+
+void MakeAbnormalInitTestcase(int file_no) {
+    char file_path[PIPE_BUF_SIZE + 1];
+    snprintf(file_path, PIPE_BUF_SIZE, "%sfile_%08x", TEST_DIR, file_no);
+
+    auto& chrs = "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::uniform_int_distribution<std::string::size_type> dist(0, sizeof(chrs) - 2);
+    std::mt19937 rng{std::random_device{}()};
+
+    std::ofstream example(file_path);
+    std::string buf;
+    int length;
+
+    length = dist(rng) + 20;
+    buf.reserve(length);
+    while (length--) {
+        buf += chrs[dist(rng)];
+    }
+    example << buf << "\n";
+
+    buf.clear();
+
+    length = dist(rng) + 20;
+    buf.reserve(length);
+    while (length--) {
+        buf += chrs[dist(rng)];
+    }
+    example << buf << "\n";
 
     example.close();
 

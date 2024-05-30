@@ -22,7 +22,7 @@
 #define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
 #define PIPE_BUF_SIZE 512
 #define TEST_NUM_PER_ROUND 10
-#define TEST_NUM_MAX 40
+#define TEST_NUM_MAX 100
 
 #define CONTINUE_INST 0
 #define WAIT_INST 1

@@ -7,7 +7,7 @@ BitMap::BitMap() {
     _length  = 1 << FSHM_MAX_ITEM_POW2;
 }
 
-double BitMap::compute_score(FSHM_TYPE* new_bitmap) {
+double BitMap::ComputeScore(FSHM_TYPE* new_bitmap) {
     double score = 0.0;
     for (int i=0; i<_length; i++) {
         if (new_bitmap[i] == 0)
@@ -23,7 +23,7 @@ double BitMap::compute_score(FSHM_TYPE* new_bitmap) {
     return score;
 }
 
-void BitMap::bitmap_update() {
+void BitMap::Update() {
     for (int i=0; i<_length; i++) 
         _bitmap[i] += _tmp_bitmap[i];
     memset(_tmp_bitmap, 0, sizeof(_tmp_bitmap));
