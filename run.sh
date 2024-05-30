@@ -34,6 +34,9 @@ fi
 
 if [ ! -d build/ ]; then
     mkdir build/
+else
+    rm -rf build/
+    mkdir build/
 fi
 
 if [ ! -z "$(ls -A /tmp/.fuzzlab/testcases)" ]; then
