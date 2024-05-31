@@ -33,7 +33,7 @@ char InstrumentFunc::ID = 0;
 
 bool InstrumentFunc::runOnFunction(Function &F) {
 
-    if (F.getName() == "__cxx_global_var_init" || F.getName() == "_GLOBAL__sub_I_test.cpp") {
+    if (F.getName() == "__cxx_global_var_init" || F.getName().startswith("_GLOBAL__sub_I_")) {
         return true;
     }
     

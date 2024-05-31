@@ -18,11 +18,12 @@
 #define DEFAULT_TEST_PROG "test.cpp.elf"
 #define TEST_PROG_DIR "/tmp/.fuzzlab/bin/"
 #define TEST_DIR "/tmp/.fuzzlab/testcases/"
+#define LOG_DIR "/tmp/.fuzzlab/logs/"
 #define FIFO_DATA "/tmp/.fuzzlab/fuzz_fifo_data"
 #define FIFO_INST "/tmp/.fuzzlab/fuzz_fifo_inst"
 #define PIPE_BUF_SIZE 512
 #define TEST_NUM_PER_ROUND 10
-#define TEST_NUM_MAX 100
+#define TEST_NUM_MAX 500
 
 #define CONTINUE_INST 0
 #define WAIT_INST 1

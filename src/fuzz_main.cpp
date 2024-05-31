@@ -8,25 +8,29 @@
 #include "bitmap.hpp"
 
 
-RunInfo RandomRunInfo();
 void MakeNormalInitTestcase(int);
 void MakeAbnormalInitTestcase(int);
 
 int main(int argc, char **argv) {
 
     char test_prog[PIPE_BUF_SIZE + 1];
+    char test_log[PIPE_BUF_SIZE + 1];
 
     if (argc > 2) {
         fprintf(stderr, "Bad arguments, using format: bin/fuzz_main [test_prog_name].");
         exit(EXIT_FAILURE);
     } else if (argc == 1) {
         snprintf(test_prog, PIPE_BUF_SIZE, "%s%s", TEST_PROG_DIR, DEFAULT_TEST_PROG);
+        snprintf(test_log, PIPE_BUF_SIZE, "%s%s.log", LOG_DIR, DEFAULT_TEST_PROG);
     } else {
         snprintf(test_prog, PIPE_BUF_SIZE, "%s%s", TEST_PROG_DIR, argv[1]);
+        snprintf(test_log, PIPE_BUF_SIZE, "%s%s.log", LOG_DIR, argv[1]);
     }
 
+    std::ofstream log(test_log);
+
 #ifdef DEMO
-    std::cout << "Preparing 20 init testcases for example program..." << std::endl;
+    log << "Preparing 20 init testcases for example program..." << std::endl;
     int num = 20;
     while (num-- > 10) {
         usleep(5000);
@@ -36,7 +40,7 @@ int main(int argc, char **argv) {
         usleep(5000);
         MakeAbnormalInitTestcase(num);
     }
-    std::cout << "Finished." << std::endl << std::endl;
+    log << "Finished." << std::endl << std::endl;
 #endif
 
     std::uniform_int_distribution<uint8_t> dist(0, UINT8_MAX);
@@ -76,7 +80,7 @@ int main(int argc, char **argv) {
                 while (!ProgFinish(__cfl_time_ptr));
 
 #ifdef VERBOSE
-                std::cout << "(pid:" << getpid() << ") Fuzz_main: sended WAIT_INST." << std::endl;
+                log << "(pid:" << getpid() << ") Fuzz_main: sended WAIT_INST." << std::endl;
 #endif
 
                 /** handle runtime information, compute score and push mutated seeds into queue. */
@@ -88,7 +92,7 @@ int main(int argc, char **argv) {
                     );
                     
 #ifdef VERBOSE
-                    std::cout << "(pid:" << getpid() << ") Fuzz_main: round seed score is " << round_seeds[i].Score() << std::endl;
+                    log << "(pid:" << getpid() << ") Fuzz_main: round seed score is " << round_seeds[i].Score() << std::endl;
 #endif
 
                     if (round_seeds[i].Score() > SCORE_THRESHOLD) {
@@ -113,7 +117,7 @@ int main(int argc, char **argv) {
                 memset(__cfl_time_ptr, 0, sizeof(PidTime) * TEST_NUM_PER_ROUND);
 
 #ifdef VERBOSE
-                std::cout << "(pid:" << getpid() << ") Fuzz_main: finished round handling, " << tested_instance << " testcases tested." << std::endl;
+                log << "(pid:" << getpid() << ") Fuzz_main: finished round handling, " << tested_instance << " testcases tested." << std::endl;
 #endif
 
             if (tested_instance == TEST_NUM_MAX) break;
@@ -123,17 +127,17 @@ int main(int argc, char **argv) {
             SendInst(inst_pipe_fd, CONTINUE_INST);
 
 #ifdef VERBOSE
-            std::cout << "(pid:" << getpid() << ") Fuzz_main: sended CONTINUE_INST." << std::endl;
+            log << "(pid:" << getpid() << ") Fuzz_main: sended CONTINUE_INST." << std::endl;
 #endif
 
             round_seeds.push_back(sm.Pop());
-            std::cout << "(pid:" << getpid() << ") Fuzz_main: testing <" << round_seeds.back().Testcase() << ">..." << std::endl;
+            log << "(pid:" << getpid() << ") Fuzz_main: testing <" << round_seeds.back().Testcase() << ">..." << std::endl;
 
             // send the test input file to data pipe.
             char buf[2*PIPE_BUF_SIZE];
             memcpy(buf, round_seeds.back().Testcase(), PIPE_BUF_SIZE);
             snprintf(buf+PIPE_BUF_SIZE, PIPE_BUF_SIZE, "%d", tested_instance % TEST_NUM_PER_ROUND);
-            // std::cout << buf << std::endl;
+            // log << buf << std::endl;
             if (write(data_pipe_fd, buf, 2*PIPE_BUF_SIZE) == -1) {
                 fprintf(stderr, "Write error on pipe %s\n", FIFO_DATA);
                 exit(EXIT_FAILURE);
@@ -146,8 +150,8 @@ int main(int argc, char **argv) {
         SendInst(inst_pipe_fd, EXIT_INST);
 
 #ifdef VERBOSE
-            std::cout << "(pid:" << getpid() << ") Fuzz_main: finished all rounds, " << tested_instance << " testcases tested." << std::endl;
-            std::cout << "(pid:" << getpid() << ") Fuzz_main: sended EXIT_INST." << std::endl;
+            log << "(pid:" << getpid() << ") Fuzz_main: finished all rounds, " << tested_instance << " testcases tested." << std::endl;
+            log << "(pid:" << getpid() << ") Fuzz_main: sended EXIT_INST." << std::endl;
 #endif
 
         (void)close(inst_pipe_fd);
@@ -171,21 +175,6 @@ int main(int argc, char **argv) {
 
 }
 
-RunInfo RandomRunInfo() {
-
-    usleep(5000);
-    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::uniform_int_distribution<uint32_t> dist;
-    std::mt19937_64 rng(now);
-
-    return RunInfo{
-        (dist(rng) % 800 + 400) * 1.0 / 100,
-        (dist(rng) % 35000 + 5000) * 1.0 / 100,
-        dist(rng) % 20 + 5
-    };
-
-}
-
 void MakeNormalInitTestcase(int file_no) {
     char file_path[PIPE_BUF_SIZE + 1];
     snprintf(file_path, PIPE_BUF_SIZE, "%sfile_%08x", TEST_DIR, file_no);
@@ -206,7 +195,7 @@ void MakeAbnormalInitTestcase(int file_no) {
     char file_path[PIPE_BUF_SIZE + 1];
     snprintf(file_path, PIPE_BUF_SIZE, "%sfile_%08x", TEST_DIR, file_no);
 
-    auto& chrs = "0123456789"
+    auto& chrs = "-+0123456789"
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

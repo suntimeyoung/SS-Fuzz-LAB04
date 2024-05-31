@@ -24,18 +24,14 @@ int main () {
     char _a, _b;
     int cnt = 2;
 
-    do {
+    cin >> _a >> _b;
+    a = (int)_a;
+    b = (int)_b;
 
-        cin >> _a >> _b;
-        a = (int)_a;
-        b = (int)_b;
+    if (a > b)
+        cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
 
-        if (a > b)
-            cout << "(pid:" << getpid() << ") Result of FuncC: " << FuncC(a, b) << endl;
-
-        cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
-
-    } while (--cnt > 0);
+    cout << "(pid:" << getpid() << ") Result of FuncA + FuncB: " << FuncA(a) + FuncB(b) << endl;  
 
     return 0;
 }

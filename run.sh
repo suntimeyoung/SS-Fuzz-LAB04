@@ -10,8 +10,8 @@ if [ "$TEST_PROG" = "" ]; then
 fi
 
 if  [ ! -f examples/$TEST_PROG ]; then
-    echo "Please ensure the test program path is right."
-    exit
+    echo "Please ensure the test program exists in example/"
+    exit 1
 fi
 
 
@@ -37,31 +37,27 @@ if [ ! -d /tmp/.fuzzlab/bin/ ]; then
     mkdir /tmp/.fuzzlab/bin/
 fi
 
+if [ ! -d /tmp/.fuzzlab/logs/ ]; then
+    mkdir /tmp/.fuzzlab/logs/
+fi
+
 if [ ! -d /tmp/.fuzzlab/testcases/ ]; then
     mkdir /tmp/.fuzzlab/testcases/
 fi
 
 if [ ! -d build/ ]; then
     mkdir build/
-    mkdir build/instrument_so/
-    $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o build/instrument_so/instrument.so $LDFLAGS
-    $CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o build/instrument_so/instrument_func.o
-    $CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o build/instrument_so/loop.o
-else
-    if [ ! -d build/instrument_so/ ] || [ -z "$(ls -A build/instrument_so/)" ]; then
-        mkdir build/instrument_so/
-        $CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o build/instrument_so/instrument.so $LDFLAGS
-        $CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o build/instrument_so/instrument_func.o
-        $CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o build/instrument_so/loop.o
-    fi
 fi
 
 if [ ! -z "$(ls -A /tmp/.fuzzlab/testcases/)" ]; then
     rm /tmp/.fuzzlab/testcases/*
 fi
 
-$CLANG_COMPILER -Xclang -load -Xclang build/instrument_so/instrument.so -c examples/$TEST_PROG -o $TEST_PROG.o
-$CLANG_COMPILER -g build/instrument_so/loop.o build/instrument_so/instrument_func.o $TEST_PROG.o -o bin/$TEST_PROG.elf
+$CLANG_COMPILER $CXXFLAGS -Wl,-znodelete -fno-rtti -fPIC -shared llvm-mode/instrument.cpp -o instrument.so $LDFLAGS
+$CLANG_COMPILER -c llvm-mode/instrument_func.cpp -o instrument_func.o
+$CLANG_COMPILER -c -Isrc/loop.hpp src/loop.cpp -o loop.o
+$CLANG_COMPILER -Xclang -load -Xclang ./instrument.so -c examples/$TEST_PROG -o $TEST_PROG.o
+$CLANG_COMPILER -fsanitize=address -g loop.o instrument_func.o $TEST_PROG.o -o bin/$TEST_PROG.elf
 
 rm -rf *.o *.so
 
