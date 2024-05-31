@@ -4,7 +4,7 @@
 
 #define FSHM_MAX_ITEM_POW2 16
 #define FSHM_TYPE unsigned int
-#define NEW_PATH_WEIGHT 2
+#define NEW_BRANCH_BONUS 2
 
 class BitMap {
 public:

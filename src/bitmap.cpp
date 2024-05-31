@@ -13,7 +13,7 @@ double BitMap::ComputeScore(FSHM_TYPE* new_bitmap) {
         if (new_bitmap[i] == 0)
             continue;
         if (_bitmap[i] == 0) {
-            score += NEW_PATH_WEIGHT;
+            score += NEW_BRANCH_BONUS;
             _tmp_bitmap[i]++;
         } else {
             score += 1.0 / _bitmap[i];

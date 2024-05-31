@@ -36,7 +36,7 @@ This project is for BUAA CST SS lab4.
 
 4. For more types of bugs (null-deref, doublefree, divby0, uaf, outofboundary):
    ```
-   $ ./run.sh 1-nullptr.cpp
+   $ ./run.sh 1-nullptr.cpp         // for example, nullptr dereference.
    $ bin/fuzz_main 1-nullptr.cpp.elf
    $ cat /tmp/.fuzzlab/logs/1-nullptr.cpp.elf.log
    $ cat /tmp/.fuzzlab/logs/1-nullptr.cpp.elf.log | grep testing
