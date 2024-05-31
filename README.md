@@ -45,5 +45,5 @@ This project is for BUAA CST SS lab4.
 
 ## Ideas
 
-See `./src/Ideas.md`.
+See [`./src/README.md`](./src/README.md).
 
