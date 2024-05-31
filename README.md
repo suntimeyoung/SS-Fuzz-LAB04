@@ -23,15 +23,24 @@ This project is for BUAA CST SS lab4.
    ```
 2. Then:
    ```
-   $ bin/fuzz_main
+   $ bin/fuzz_main                  // default using example/test.cpp for demo.
    ```
 3. For more clarity:
    ```
-   $ bin/fuzz_main | grep testing
-   $ bin/fuzz_main | grep round
    $ bin/fuzz_main | grep Parent
    $ bin/fuzz_main | grep Child
+   $ cat /tmp/.fuzzlab/logs/test.cpp.elf.log | grep testing
+   $ cat /tmp/.fuzzlab/logs/test.cpp.elf.log | grep round
    ...
+   ```
+
+4. For more types of bugs (null-deref, doublefree, divby0, uaf, outofboundary):
+   ```
+   $ ./run.sh 1-nullptr.cpp
+   $ bin/fuzz_main 1-nullptr.cpp.elf
+   $ cat /tmp/.fuzzlab/logs/1-nullptr.cpp.elf.log
+   $ cat /tmp/.fuzzlab/logs/1-nullptr.cpp.elf.log | grep testing
+   $ cat /tmp/.fuzzlab/logs/1-nullptr.cpp.elf.log | grep round
    ```
 
 ## Ideas
